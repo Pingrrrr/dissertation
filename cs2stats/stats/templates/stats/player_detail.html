@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ player.name }} - Player Details{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card player-detail-card mx-auto">
+                <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" loading="lazy">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ player.name }}</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for item in player.items %}
+                            <li class="list-group-item">{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'team_detail' player.team.id %}" class="btn btn-primary mt-3">Back to Team</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

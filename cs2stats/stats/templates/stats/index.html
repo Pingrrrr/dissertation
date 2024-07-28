@@ -1,0 +1,22 @@
+<!-- index.html extends base.html and fills in the title and content blocks. -->
+{% extends 'base.html' %}
+
+{% block title %}Team List{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Teams</h1>
+<div class="row">
+    {% for team in teams %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <img src="{{ team.image_url }}" class="card-img-top" alt="{{ team.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ team.name }}</h5>
+                <a href="{% url 'team_detail' team.id %}" class="btn btn-primary">View Team</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
