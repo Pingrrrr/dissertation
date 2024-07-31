@@ -11,9 +11,9 @@
             {% if forloop.counter <= 5 %}
                 <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-3">
                     <div class="card player-card">
-                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" loading="lazy">
+                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.nick_name }}" loading="lazy">
                         <div class="card-body text-center">
-                            <h5 class="card-title">{{ player.name }}</h5>
+                            <h5 class="card-title">{{ player.nick_name }}</h5>
                             <ul class="list-group list-group-flush">
                                 {% for item in player.items %}
                                     <li class="list-group-item">{{ item }}</li>
@@ -32,9 +32,9 @@
             {% if forloop.counter == 6 %}
                 <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
                     <div class="card coach-card">
-                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" loading="lazy">
+                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.nick_name }}" loading="lazy">
                         <div class="card-body">
-                            <h5 class="card-title">{{ player.name }} - Coach</h5>
+                            <h5 class="card-title">{{ player.nick_name }} - Coach</h5>
                             <ul class="list-group list-group-flush">
                                 {% for item in player.items %}
                                     <li class="list-group-item">{{ item }}</li>

@@ -9,7 +9,7 @@
             <div class="card player-detail-card mx-auto">
                 <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" loading="lazy">
                 <div class="card-body text-center">
-                    <h5 class="card-title">{{ player.name }}</h5>
+                    <h5 class="card-title">{{ player.nick_name }}</h5>
                     <ul class="list-group list-group-flush">
                         {% for item in player.items %}
                             <li class="list-group-item">{{ item }}</li>
