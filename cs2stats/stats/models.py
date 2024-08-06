@@ -54,13 +54,13 @@ class Kills(models.Model):
     attacker_ID = models.ForeignKey(Player, on_delete=models.SET_NULL, related_name='attacker', null=True, blank=True)
     assister_ID = models.ForeignKey(Player, on_delete=models.SET_NULL, related_name='assister', null=True, blank=True)
     victim_ID = models.ForeignKey(Player, on_delete=models.SET_NULL, related_name='victim', null=True, blank=True)
-    attackerSide = models.CharField(max_length=100, default='Unknown')
-    victimSide = models.CharField(max_length=100,default='Unknown')
+    attackerSide = models.CharField(max_length=100,null=True, default='Unknown')
+    victimSide = models.CharField(max_length=100,null=True,default='Unknown')
     isHeadshot = models.BooleanField()
     distance = models.FloatField()
     isTrade = models.BooleanField()
-    weapon = models.CharField(max_length=100,default='Unknown')
-    weaponClass = models.CharField(max_length=100, default='Unknown') #this will be table later
+    weapon = models.CharField(max_length=100,null=True,default='Unknown')
+    weaponClass = models.CharField(max_length=100,null=True, default='Unknown') #this will be table later
 
     def __str__(self):
         return f"{self.id}"
@@ -81,6 +81,12 @@ class Stat(models.Model):
     maps_played = models.IntegerField(default=0)
     win_percentage = models.FloatField(default=0.0)
     entry_kills = models.IntegerField(default=0)
+    adr = models.FloatField(default=0.0)
+    kast = models.FloatField(default=0.0) 
+    impact = models.FloatField(default=0.0)
+
+    
 
     def __str__(self):
         return f"{self.id}"
+
