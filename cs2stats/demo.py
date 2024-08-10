@@ -39,47 +39,45 @@ print(dem.header['map_name'])
 #print(type(dem.header))
 
 #series 1
-series = Series.objects.get(id=1)
+#series = Series.objects.get(id=1)
+#make a new series
+series = Series(winningTeam="Undecided")
+series.save()
+
+
 navi = Team.objects.get(id=1)
 vp = Team.objects.get(id=2)
-match = Match.objects.get(id=1)
+#match = Match.objects.get(id=1)
 #can also query like this: https://docs.djangoproject.com/en/5.0/topics/db/queries/#retrieving-objects
 
 
 #match
-#match = Match()
-#match.date=timezone.now()
+match = Match()
+match.date=timezone.now()
 
-#match.team_a=navi
-#match.team_b=vp
-#match.map = dem.header['map_name']
-#match.series_id = series
-#match.save()
+match.team_a=navi
+match.team_b=vp
+match.map = dem.header['map_name']
+match.series_id = series
+match.save()
 
 
 
 #round
-
-#for index, round in dem.rounds.iterrows():
-#for round in dem.rounds:
-#    print(round)
-#    print(type(round))
-#    r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], roundEndReason=round['reason'])
-#    r.save()
+for index, round in dem.rounds.iterrows():
+    r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], roundEndReason=round['reason'])
+    r.save()
 
 #kills
-
-
-
 for index, kill in dem.kills.iterrows():
     # if it doesn't exist, print a message and skip to the next kill.
     try:
-        round_ID = Round.objects.get(id=kill['round'])
+        round = Round.objects.filter(match_id=match).get(round_num=kill['round'])
     except ObjectDoesNotExist:
-        print(f"Round with id {kill['round']} does not exist")
+        print(f"round_num {kill['round']} does not exist for match {match}")
         continue
     
-    # Try-Except / If any of them do not exist, print a message and set the variable to None.
+    #Not all kills will have assisters or even attackers as players can be killed by bomb or falling
     try:
         attacker = Player.objects.get(steam_id=kill['attacker_steamid'])
     except Player.DoesNotExist:
@@ -97,9 +95,9 @@ for index, kill in dem.kills.iterrows():
         victim = None
 
     
-    if round_ID:
+    if round:
         k = Kills(
-            round_ID=round_ID, 
+            round_ID=round, 
             attackerSide=kill['attacker_team_name'], 
             victimSide=kill['victim_team_name'], 
             isHeadshot=kill['headshot'], 
@@ -121,17 +119,10 @@ for index, kill in dem.kills.iterrows():
     else:
         print(f"Skipping kill due to missing round, attacker, or victim data: {kill}")
 
-
+#stats
 adr_stats = adr(dem)
 kast_stats = kast(dem)
 rating_stats = rating(dem)
-
-
-match_id = 1  
-match = Match.objects.get(id=match_id)
-
-
-print(dem.kills.columns)
 
 
 player_steam_ids = set(dem.kills['attacker_steamid']).union(set(dem.kills['victim_steamid']))
@@ -146,37 +137,31 @@ for steam_id in player_steam_ids:
     
     total_kills = len(dem.kills[dem.kills['attacker_steamid'] == steam_id])
     total_deaths = len(dem.kills[dem.kills['victim_steamid'] == steam_id])
+    total_damage = dem.damages[dem.damages['attacker_steamid'] == steam_id]['dmg_health_real'].sum()
     rounds_played = len(dem.rounds)
 
     if rounds_played > 0:
         kills_per_round = total_kills / rounds_played
         deaths_per_round = total_deaths / rounds_played
         kd_ratio = total_kills / (total_deaths if total_deaths > 0 else 1)
-        damage_per_round = adr_stats.get(steam_id, 0)
+        damage_per_round = total_damage / rounds_played
         headshot_percentage = (dem.kills[dem.kills['attacker_steamid'] == steam_id]['headshot'].mean()) * 100
-        
-        # Adjust the column names based on inspection
-        try:
-            win_percentage = (dem.rounds[dem.rounds['winning_side'] == player_instance.team.name].shape[0] / rounds_played) * 100
-        except KeyError:
-            win_percentage = 0  # Set a default value or handle as needed
 
-        try:
-            
-            entry_kills = len(dem.kills[(dem.kills['attacker_steamid'] == steam_id) & (dem.kills['is_entry'] == True)])
-        except KeyError:
-            entry_kills = 0  # Set a default value or handle as needed
+        adr_df=adr_stats[(adr_stats['steamid']==steam_id) & (adr_stats['team_name']=='all')]
+        kast_df=kast_stats[(kast_stats['steamid']==steam_id) & (kast_stats['team_name']=='all')]
+        rating_df=rating_stats[(rating_stats['steamid']==steam_id) & (rating_stats['team_name']=='all')]
+
         
-        adr_value = adr_stats.get(steam_id, 0)
-        kast_value = kast_stats.get(steam_id, 0)
-        impact_value = rating_stats.get(steam_id, 0)
-        
+        adr_value = adr_df['adr']
+        kast_value = kast_df['kast']
+        rating_value = rating_df['rating']
+        impact_value = rating_df['impact']
         
         stat, created = Stat.objects.update_or_create(
             player=player_instance,
             match=match,
             defaults={
-                'rating': rating_stats.get(steam_id, 0),
+                'rating': rating_value,
                 'kills_per_round': kills_per_round,
                 'deaths_per_round': deaths_per_round,
                 'kd_ratio': kd_ratio,
@@ -185,9 +170,9 @@ for steam_id in player_steam_ids:
                 'total_deaths': total_deaths,
                 'damage_per_round': damage_per_round,
                 'rounds_played': rounds_played,
-                'maps_played': 1,  # Assuming 1 map per match for simplicity
-                'win_percentage': win_percentage,
-                'entry_kills': entry_kills,
+                'maps_played': 1,  
+                'win_percentage': 0,
+                'entry_kills': 0,
                 'adr': adr_value,
                 'kast': kast_value,
                 'impact': impact_value
