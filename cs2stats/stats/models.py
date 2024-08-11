@@ -8,15 +8,22 @@ class Team(models.Model):
 
     def __str__(self):
         return self.name
+    
+class User(models.Model):
+    username = models.CharField(max_length=100, default='')
+    date_joined = models.DateTimeField()
+    def __str__(self):
+        return self.username
+
 
 class Player(models.Model):
+    user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
     nick_name = models.CharField(max_length=100, default='Unknown Nickname')
     real_name = models.CharField(max_length=100, default='Unknown Real Name')
     nationality = models.CharField(max_length=50, default='Unknown Nationality')
     age = models.IntegerField(default=0)
     bio = models.TextField(default='No biography available.')
     image_url = models.URLField(blank=True, default='')  # Empty default for blank field
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True)
     steam_id = models.CharField(max_length=50, default='Unknown Steam ID')
 
     def __str__(self):
@@ -27,7 +34,6 @@ class Series(models.Model):
 
     def __str__(self):
         return f"{self.id} winner is {self.winningTeam}"
-    
     
 class Match(models.Model):
     date = models.DateTimeField()
@@ -85,8 +91,47 @@ class Stat(models.Model):
     kast = models.FloatField(default=0.0) 
     impact = models.FloatField(default=0.0)
 
-    
-
     def __str__(self):
         return f"{self.id}"
+    
+class Strategy(models.Model):
+    name = models.CharField(max_length=100, default='Tactic A')
+    description = models.CharField(max_length=100)
+    creator = models.ForeignKey(Player, on_delete=models.CASCADE)
+    maps = models.ManyToManyField('Map', related_name='map_name')
+    rounds = models.ManyToManyField('Round', related_name='round_id')
+
+    def __str__(self):
+        return f"{self.tactic_name} "
+    
+class Map(models.Model):
+    name = models.CharField(max_length=100)
+    img_url = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.map_name}"
+    
+class SeriesReview(models.Model):
+    series_id = models.ForeignKey(Series, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    content = models.CharField(max_length=10000)
+    created_time = models.DateTimeField()
+    last_updated = models.DateTimeField() #can this content be updated by different users and how will i keep track of changes
+
+    def __str__(self):
+        return f"{self.series_id}"
+    
+class SeriesReviewComment(models.Model):
+    series_review_id = models.ForeignKey(SeriesReview, on_delete=models.CASCADE)
+    comment = models.CharField(max_length=10000)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    replay_time_code = models.TimeField()# the time in the replay this comment is talking about (can be left null)
+    created_time = models.DateTimeField()
+    last_updated = models.DateTimeField() #can this content be updated by different users and how will i keep track of changes
+
+    def __str__(self):
+        return f"{self.series_review_id}"
+
+
 

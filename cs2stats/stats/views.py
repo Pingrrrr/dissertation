@@ -18,9 +18,9 @@ def team_detail(request, team_id):
 
 
 def player_detail(request, player_id):
-    player = get_object_or_404(Player, id=player_id)
-    # Ensure `team` is safe to access
-    team = player.team if player.team else None
+    player = get_object_or_404(Player, user_id=player_id)
+    team = get_object_or_404(Team, players=player_id)
+
     return render(request, 'stats/player_detail.html', {
         'player': player,
         'team': team
