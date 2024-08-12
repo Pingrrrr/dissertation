@@ -47,5 +47,26 @@
             {% endif %}
         {% endfor %}
     </div>
+
+        <!-- Row for recent games -->
+        <div class="row justify-content-center">
+            {% for match in matches %}
+                {% if forloop.counter <= 5 %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
+                        <div class="card player-card">
+                            <img  class="card-img-top" alt="{{ match.map }}" loading="lazy">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ match.map }} - Coach</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">{{ match.team_a.name }}</li>
+                                    <li class="list-group-item">{{ match.team_b.name }}</li>
+                                </ul>
+                                <a href="#" class="btn btn-primary mt-3">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
 </div>
 {% endblock %}

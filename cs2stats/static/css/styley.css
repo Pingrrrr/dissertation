@@ -1,0 +1,94 @@
+.dark-mode-section {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.dark-mode-section .btn-primary {
+  background-color: #6200ee;
+}
+
+.dark-mode-section .btn-primary:hover {
+  background-color: #3700b3;
+}
+
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar Styles */
+.navbar-dark {
+  background-color: #1c1c1c;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #fff;
+}
+
+/* Main Section */
+.main-section {
+  background-color: #282c34;
+  color: white;
+  padding: 100px 0;
+  text-align: center;
+}
+
+
+.feature-card {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border: 1px solid #333;
+}
+
+.feature-icon {
+  color: #007bff;
+}
+
+
+.footer {
+  background-color: #282c34;
+  color: white;
+  padding: 30px 0;
+  text-align: center;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #6200ee;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #3700b3;
+}
+
+/* Dark Mode for Sections with Light Backgrounds */
+.bg-light {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.bg-light .btn-primary {
+  background-color: #6200ee;
+}
+
+.bg-light .btn-primary:hover {
+  background-color: #3700b3;
+}
+
+/* Card Shadows */
+.card {
+  background-color: #1e1e1e;
+  border-color: #333;
+}
+
+.card-body {
+  color: #e0e0e0;
+}

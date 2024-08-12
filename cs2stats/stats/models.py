@@ -51,6 +51,11 @@ class Round(models.Model):
     isWarmup = models.BooleanField(default=False)
     winningSide = models.CharField(max_length=100, default='Unknown')
     roundEndReason = models.CharField(max_length=100,  default='Unknown') #bomb detonation, T victory, CT victory, defuse
+    bombPlant = models.BooleanField(default=False)
+    t_startEquipmentValue = models.IntegerField(default=0)
+    ct_startEquipmentValue = models.IntegerField(default=0)
+    t_endEquipmentValue = models.IntegerField(default=0)
+    ct_endEquipmentValue = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.id}"
@@ -70,6 +75,7 @@ class Kills(models.Model):
 
     def __str__(self):
         return f"{self.id}"
+
 
 
 class Stat(models.Model):
@@ -100,9 +106,15 @@ class Strategy(models.Model):
     creator = models.ForeignKey(Player, on_delete=models.CASCADE)
     maps = models.ManyToManyField('Map', related_name='map_name')
     rounds = models.ManyToManyField('Round', related_name='round_id')
+    type = models.ManyToManyField('StrategyType', related_name='type_id')
+    
 
     def __str__(self):
         return f"{self.tactic_name} "
+
+class StrategyType(models.Model):
+    name = models.CharField(max_length=100)
+    success_criteria = models.CharField(max_length=1000) # this will eventually be filters on what stats are important like kills, round wins, bobm plants etc
     
 class Map(models.Model):
     name = models.CharField(max_length=100)

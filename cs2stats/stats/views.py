@@ -16,6 +16,13 @@ def team_detail(request, team_id):
     team = get_object_or_404(Team, id=team_id)
     return render(request, 'stats/team_detail.html', {'team': team})
 
+def team_comms(request):
+    return render(request, 'stats/teamComms.html', {})
+
+def teams(request):
+    teams = Team.objects.all()
+    return render(request, 'stats/teams.html', {'teams': teams})
+
 
 def player_detail(request, player_id):
     player = get_object_or_404(Player, user_id=player_id)
