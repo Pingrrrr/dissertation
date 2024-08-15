@@ -19,7 +19,7 @@
                                     <li class="list-group-item">{{ item }}</li>
                                 {% endfor %}
                             </ul>
-                            <a href="{% url 'player_detail' player.user_id %}" class="btn btn-primary mt-3">View Details</a>
+                            <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-primary mt-3">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                                     <li class="list-group-item">{{ item }}</li>
                                 {% endfor %}
                             </ul>
-                            <a href="{% url 'player_detail' player.id %}" class="btn btn-primary mt-3">View Details</a>
+                            <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-primary mt-3">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                         <div class="card player-card">
                             <img  class="card-img-top" alt="{{ match.map }}" loading="lazy">
                             <div class="card-body">
-                                <h5 class="card-title">{{ match.map }} - Coach</h5>
+                                <h5 class="card-title">{{ match.map }}</h5>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item">{{ match.team_a.name }}</li>
                                     <li class="list-group-item">{{ match.team_b.name }}</li>

@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import Player, Match, Stat, Team
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 
 
 
@@ -14,7 +15,9 @@ def index(request):
 
 def team_detail(request, team_id):
     team = get_object_or_404(Team, id=team_id)
-    return render(request, 'stats/team_detail.html', {'team': team})
+    #https://docs.djangoproject.com/en/dev/topics/db/queries/#complex-lookups-with-q-objects
+    matches = Match.objects.filter(Q(team_a = team) | Q(team_b = team))
+    return render(request, 'stats/team_detail.html', {'team': team, 'matches': matches,})
 
 def team_comms(request):
     return render(request, 'stats/teamComms.html', {})
@@ -25,7 +28,7 @@ def teams(request):
 
 
 def player_detail(request, player_id):
-    player = get_object_or_404(Player, user_id=player_id)
+    player = get_object_or_404(Player, steam_id=player_id)
     team = get_object_or_404(Team, players=player_id)
 
     return render(request, 'stats/player_detail.html', {

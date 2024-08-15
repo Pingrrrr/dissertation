@@ -17,14 +17,14 @@ class User(models.Model):
 
 
 class Player(models.Model):
-    user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, null=True, on_delete=models.SET_NULL)
     nick_name = models.CharField(max_length=100, default='Unknown Nickname')
     real_name = models.CharField(max_length=100, default='Unknown Real Name')
     nationality = models.CharField(max_length=50, default='Unknown Nationality')
     age = models.IntegerField(default=0)
     bio = models.TextField(default='No biography available.')
     image_url = models.URLField(blank=True, default='')  # Empty default for blank field
-    steam_id = models.CharField(max_length=50, default='Unknown Steam ID')
+    steam_id = models.CharField(max_length=50, primary_key=True)
 
     def __str__(self):
         return self.nick_name
@@ -50,15 +50,31 @@ class Round(models.Model):
     round_num = models.IntegerField(default=1)
     isWarmup = models.BooleanField(default=False)
     winningSide = models.CharField(max_length=100, default='Unknown')
+    winningTeam = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
     roundEndReason = models.CharField(max_length=100,  default='Unknown') #bomb detonation, T victory, CT victory, defuse
     bombPlant = models.BooleanField(default=False)
     t_startEquipmentValue = models.IntegerField(default=0)
     ct_startEquipmentValue = models.IntegerField(default=0)
     t_endEquipmentValue = models.IntegerField(default=0)
     ct_endEquipmentValue = models.IntegerField(default=0)
+    
 
     def __str__(self):
         return f"{self.id}"
+    
+class BombEvents(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
+    event = models.CharField(max_length=50)
+    site = models.CharField(max_length=50)
+    ticks_since_round_start	= models.IntegerField(default=0)
+    ticks_since_freeze_time_end	= models.IntegerField(default=0)
+    ticks_since_bomb_plant	= models.IntegerField(default=0)
+    player = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.id}"
+    
+
     
 class Kills(models.Model):
     round_ID = models.ForeignKey(Round, on_delete=models.SET_NULL, null=True, blank=True)
@@ -68,13 +84,17 @@ class Kills(models.Model):
     attackerSide = models.CharField(max_length=100,null=True, default='Unknown')
     victimSide = models.CharField(max_length=100,null=True,default='Unknown')
     isHeadshot = models.BooleanField()
-    distance = models.FloatField()
+    distance = models.FloatField(default=0.0)
     isTrade = models.BooleanField()
     weapon = models.CharField(max_length=100,null=True,default='Unknown')
     weaponClass = models.CharField(max_length=100,null=True, default='Unknown') #this will be table later
+    tick = models.IntegerField(default=0)
+    round_time = models.CharField(max_length=10)
 
     def __str__(self):
         return f"{self.id}"
+    
+
 
 
 

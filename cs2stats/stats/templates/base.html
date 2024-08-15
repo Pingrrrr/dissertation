@@ -31,11 +31,9 @@
                             <a class="nav-link" href="{% url 'teams' %}">Teams</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#signup">Sign Up</a>
+                            <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#contact">Contact</a>
-                        </li>
+
                     </ul>
                 </div>
             </div>
@@ -48,7 +46,9 @@
         {% block content %}{% endblock %}
     </main>
 
-
+    <footer class="footer">
+        <p>&copy; 2024 CSStrategist. All Rights Reserved.</p>
+    </footer>
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
