@@ -5,14 +5,40 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
 from django.utils import timezone
 from awpy import Demo
-from stats.models import Player, Match, Stat, Team, Series, Round, Kills
+from stats.models import Player, Match, Stat, Team, Series, Round, Kills, BombEvent
 #https://docs.djangoproject.com/en/5.0/ref/exceptions/
 from django.core.exceptions import ObjectDoesNotExist
 from awpy.stats import adr
 from awpy.stats import kast
 from awpy.stats import rating
+from django.db.models import Q
+import pandas as pd
 
-def parseMatchFromDemo(dem, ctTeam, tTeam, series):
+
+def determineTickRate(demo):
+    t=demo.ticks[['game_time', 'tick']].sample(n=2)
+    tickDiff = t.iloc[1]['tick']-t.iloc[0]['tick']
+    timeDiff = t.iloc[1]['game_time']-t.iloc[0]['game_time']
+    return round(tickDiff/timeDiff)
+
+def determineTrades(match, tradeTime, tickRate):
+    for round in match.round_set.all():
+        for kill in round.kills_set.all():
+            #find kills from the last few seconds
+            prevKills = round.kills_set.filter(tick__lt=kill.tick).filter(tick__gt=kill.tick-(tradeTime*tickRate))
+
+            #if the victim of this kill was the attacker of a recent kill, we can mark that previous kill as a trade
+            if prevKills.filter(attacker_ID=kill.victim_ID).exists():
+                #only the most recent kill will get marked as traded so we dont allow a player to get traded more than once
+                prevKill = prevKills.filter(attacker_ID=kill.victim_ID).order_by('-tick')[:1]
+                pk = Kills.objects.get(id=prevKill)
+                pk.tradedBy = kill.id
+                pk.save()
+                print(f"Round {round.round_num} : {pk.victim_ID} was traded by {kill.id}")
+
+
+
+def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
 
     if not series:
         series = Series(winningTeam="Undecided")
@@ -26,6 +52,7 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
     match.team_b=tTeam
     match.map = dem.header['map_name'] 
     match.series_id = series
+    match.tick_rate=tickRate
     match.save()
 
 
@@ -33,13 +60,6 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
     for index, round in dem.rounds.iterrows():
         print(round['round'])
         print(dem.events['round_announce_last_round_half']['round'])
-
-        # use the las round of the half to work out when the teams swap sides (and it even works for overtime)
-        if (round['round']-1) in dem.events['round_announce_last_round_half']['round'].tolist():
-            tmpCtTeam = ctTeam
-            ctTeam = tTeam
-            tTeam = tmpCtTeam
-
 
         #for some reason the winner is returned as a number (3=CT, 2=T)
         if (round['winner'] == "CT") or (round['winner'] == 3):
@@ -49,6 +69,12 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
 
         r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], winningTeam=winner, roundEndReason=round['reason'])
         r.save()
+
+        # use the last round of the half to work out when the teams swap sides (and it even works for overtime)
+        if (round['round']-1) in dem.events['round_announce_last_round_half']['round'].tolist():
+            tmpCtTeam = ctTeam
+            ctTeam = tTeam
+            tTeam = tmpCtTeam
 
     #kills
     for index, kill in dem.kills.iterrows():
@@ -84,7 +110,6 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
                 victimSide=kill['victim_team_name'], 
                 isHeadshot=kill['headshot'], 
                 distance=0.0, 
-                isTrade=False, 
                 weapon=kill['weapon'], 
                 weaponClass="weapons",
                 tick=kill['tick'],
@@ -103,9 +128,35 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
         else:
             print(f"Skipping kill due to missing round, attacker, or victim data: {kill}")
 
+    determineTrades(match=match, tradeTime=5, tickRate=tickRate)
+
+    #bomb events
+    for index, bomb_event in dem.bomb.iterrows():
+        try:
+            round = Round.objects.filter(match_id=match).get(round_num=bomb_event['round'])
+        except ObjectDoesNotExist:
+            print(f"round_num {kill['round']} does not exist for match {match}")
+            continue
+        
+        b = BombEvent(
+            round=round,
+            event=bomb_event['event'],
+            site=bomb_event['site'],
+            x=bomb_event['X'],
+            y=bomb_event['Y'],
+            z=bomb_event['Z'],
+            ticks_since_round_start = bomb_event['ticks_since_round_start'],
+            ticks_since_freeze_time_end	= bomb_event['ticks_since_freeze_time_end'],
+            ticks_since_bomb_plant	= bomb_event['ticks_since_bomb_plant'] if not pd.isna(bomb_event['ticks_since_bomb_plant']) else 0,
+        )
+
+        b.save()
+
+
+
     #stats
     adr_stats = adr(dem)
-    kast_stats = kast(dem)
+    kast_stats = kast(dem, trade_ticks=tickRate)
     rating_stats = rating(dem)
 
 
@@ -166,15 +217,16 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series):
             print(f"Updated stats for player {player_instance.nick_name}")
 
 
+
+
 #dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem", ticks=True)
 dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m2-anubis.dem", ticks=True)
-
 
 
 #series 1
 #series = Series.objects.get(id=1)
 #make a new series
-series = Series(winningTeam="Undecided")
+series = Series(winningTeam="Undecided", bestOf=3)
 series.save()
 
 #ct_team = dem.events['begin_new_match'][['ct_team_clan_name']]
@@ -183,5 +235,6 @@ series.save()
 team_a = Team.objects.get(id=1) #navi
 team_b = Team.objects.get(id=2) #vp
 
-parseMatchFromDemo(dem=dem, ctTeam=team_a, tTeam=team_b, series=series)
+tickRate = determineTickRate(demo=dem)
+parseMatchFromDemo(dem=dem, ctTeam=team_a, tTeam=team_b, series=series, tickRate=tickRate)
         

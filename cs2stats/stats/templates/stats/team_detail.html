@@ -50,18 +50,19 @@
 
         <!-- Row for recent games -->
         <div class="row justify-content-center">
-            {% for match in matches %}
+            {% for s in series %}
                 {% if forloop.counter <= 5 %}
                     <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
                         <div class="card player-card">
                             <img  class="card-img-top" alt="{{ match.map }}" loading="lazy">
                             <div class="card-body">
-                                <h5 class="card-title">{{ match.map }}</h5>
+                                <h5 class="card-title">{{ s.winningTeam }}</h5>
                                 <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">{{ match.team_a.name }}</li>
-                                    <li class="list-group-item">{{ match.team_b.name }}</li>
+                                    {% for m in s.match_set.all %}
+                                        <li>{{ m.map }}</li>
+                                    {% endfor %}
                                 </ul>
-                                <a href="#" class="btn btn-primary mt-3">View Details</a>
+                                <a href="{% url 'series_detail' s.id %}" class="btn btn-primary mt-3">View Details</a>
                             </div>
                         </div>
                     </div>

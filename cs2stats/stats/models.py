@@ -17,7 +17,7 @@ class User(models.Model):
 
 
 class Player(models.Model):
-    user = models.OneToOneField(User, null=True, on_delete=models.SET_NULL)
+    user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
     nick_name = models.CharField(max_length=100, default='Unknown Nickname')
     real_name = models.CharField(max_length=100, default='Unknown Real Name')
     nationality = models.CharField(max_length=50, default='Unknown Nationality')
@@ -31,6 +31,8 @@ class Player(models.Model):
 
 class Series(models.Model):
     winningTeam = models.CharField(max_length=100, default='Unknown')
+    bestOf = models.IntegerField(default=1)
+
 
     def __str__(self):
         return f"{self.id} winner is {self.winningTeam}"
@@ -41,9 +43,10 @@ class Match(models.Model):
     team_b = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_b_matches',null=True, blank=True)
     map = models.CharField(max_length=100, default='Unknown')
     series_id = models.ForeignKey(Series, on_delete=models.SET_NULL, null=True, blank=True)
+    tick_rate = models.IntegerField(default=64)
 
     def __str__(self):
-        return f"{self.team_a} vs {self.team_b}"
+        return f"{self.map} : {self.team_a} vs {self.team_b}"
     
 class Round(models.Model):
     match_id = models.ForeignKey(Match, on_delete=models.SET_NULL, null=True, blank=True)
@@ -62,19 +65,21 @@ class Round(models.Model):
     def __str__(self):
         return f"{self.id}"
     
-class BombEvents(models.Model):
+class BombEvent(models.Model):
     round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
     event = models.CharField(max_length=50)
     site = models.CharField(max_length=50)
+    x = models.FloatField(default=0.0)
+    y = models.FloatField(default=0.0)
+    z = models.FloatField(default=0.0)
     ticks_since_round_start	= models.IntegerField(default=0)
     ticks_since_freeze_time_end	= models.IntegerField(default=0)
-    ticks_since_bomb_plant	= models.IntegerField(default=0)
+    ticks_since_bomb_plant	= models.IntegerField(default=0, null=True)
     player = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"{self.id}"
     
-
     
 class Kills(models.Model):
     round_ID = models.ForeignKey(Round, on_delete=models.SET_NULL, null=True, blank=True)
@@ -85,7 +90,7 @@ class Kills(models.Model):
     victimSide = models.CharField(max_length=100,null=True,default='Unknown')
     isHeadshot = models.BooleanField()
     distance = models.FloatField(default=0.0)
-    isTrade = models.BooleanField()
+    traded_by = models.IntegerField(null=True, default=None)
     weapon = models.CharField(max_length=100,null=True,default='Unknown')
     weaponClass = models.CharField(max_length=100,null=True, default='Unknown') #this will be table later
     tick = models.IntegerField(default=0)
@@ -94,9 +99,6 @@ class Kills(models.Model):
     def __str__(self):
         return f"{self.id}"
     
-
-
-
 
 class Stat(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)

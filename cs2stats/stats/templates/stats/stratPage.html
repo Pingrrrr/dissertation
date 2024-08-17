@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Strategy Maker{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<script src="{% static 'maps.js' %}"></script>
+
+<!-- custom css here until I work out how to get the map to work with the other css-->
+<style>
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.map-container {
+    position: relative;
+}
+
+#map-canvas {
+    border: 1px solid #444; 
+    background-color: #1e1e1e; 
+}
+
+.tools {
+    margin-top: 10px;
+}
+
+.tool-icon {
+    display: inline-block;
+    padding: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+    color: #e0e0e0; 
+    background-color: transparent; 
+}
+
+.tool-icon.active {
+    background-color: #007bff; 
+    color: white; 
+    border-radius: 50%;
+}
+
+.tool-icon:hover {
+    background-color: #0056b3; 
+    color: white; 
+}
+</style>
+
+    <div class="map-container my-4">
+        <h1>CS2 Strategy Maker</h1>
+        <label for="map-selector">Choose a Map:</label>
+        <select id="map-selector">
+            {% for map in maps %}
+                <option value="{{map.name}}">{{map.name}}</option>
+            {% endfor %}
+    
+        </select>
+    </div>
+    <div class="map-container">
+        <canvas id="map-canvas" width="800" height="600"></canvas>
+    </div>
+    <div class="tools">
+        <div id="draw" class="tool-icon" title="Draw">
+            <i class="fas fa-pencil-alt"></i>
+        </div>
+        <div id="erase" class="tool-icon" title="Erase">
+            <i class="fas fa-eraser"></i>
+        </div>
+    </div>
+
+{% endblock %}
