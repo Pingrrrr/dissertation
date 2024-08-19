@@ -27,19 +27,30 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'index' %}">Home</a>
-                        </li>
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link active" href="{% url 'dashboard' %}">Home</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link active" href="{% url 'index' %}">Home</a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'teams' %}">Teams</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'stratPage' %}">Strategize</a>
-                        </li>
-
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'stratPage' %}">Strategize</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'logout' %}">Log out</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'login' %}">Log in</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>

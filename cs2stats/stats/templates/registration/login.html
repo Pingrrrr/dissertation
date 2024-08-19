@@ -13,6 +13,7 @@
                     </div>
                     <div class="card-body">
                         <form method="post">
+                            <!--https://docs.djangoproject.com/en/5.1/howto/csrf/-->
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label for="id_username" class="form-label">Username</label>

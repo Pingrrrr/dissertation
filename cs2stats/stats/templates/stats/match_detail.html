@@ -1,59 +1,90 @@
 {% extends 'base.html' %}
 
 {% block title %}Match Overview{% endblock %}
+{% load static %}
 
 {% block content %}
 <div class="container my-4">
     
-    <div class="row justify-content-center">
-        
-                <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-3">
-                    <div class="card player-card">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">{{ match.match.map }}</h5>
-                            <ul class="list-group list-group-flush">
-                                {% for round  in rounds %}
-                                    <li class="list-group-item">
-                                        {{ round.round_num }} : {{ round.winningTeam }} : {{ round.roundEndReason }}
-                                        <a href="#" class="btn btn-primary mt-3">View Details</a>
-
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card player-card">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Stats</h5>
-                            <ul class="list-group list-group-flush">
-                                {% for stat  in stats %}
-                                    <li class="list-group-item">
-                                        {{ stat.player.nick_name }} : {{ stat.adr }} : {{ stat.kast }}
-                                        <a href="#" class="btn btn-primary mt-3">View Details</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-        
+    <!-- Match Information -->
+    <div class="row">
+        <div class="col text-center">
+            <h2>{{ match.team_a.name }} vs {{ match.team_b.name }}</h2>
+            <h4>{{ match.map }}</h4>
+        </div>
     </div>
-</div>
 
-{% endblock %}
-
-<div class="row">
-    {% for team in teams %}
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <img src="{{ team.image_url }}" class="card-img-top" alt="{{ team.name }}">
-            <div class="card-body">
-                <h5 class="card-title">{{ team.name }}</h5>
-                <a href="{% url 'team_detail' team.id %}" class="btn btn-primary">View Team</a>
+    <!-- Team A Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="text-center">{{ match.team_a.name }} Player Stats</h5>
+            <div class="card-group ">
+                {% for stat in team_a_stats %}
+                    <div class="card">
+                        <img src="{% static stat.player.image_url %}" class="card-img-top" alt="Profile image of {{ stat.player.nick_name }}">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{ stat.player.nick_name }}</h5>
+                            <p class="card-text">ADR: {{ stat.adr|floatformat:2 }}</p>
+                            <p class="card-text">ADR: {{ stat.kast|floatformat:2 }}</p>
+                          </div>
+                    
+                        <a href="{% url 'player_detail' stat.player.steam_id %}" class="btn btn-primary btn-sm mt-2 w-100">View Details</a>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Team B Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="text-center">{{ match.team_b.name }} Player Stats</h5>
+            <div class="card-group ">
+                {% for stat in team_b_stats %}
+                    <div class="card">
+                        <img src="{% static stat.player.image_url %}" class="card-img-top" alt="Profile image of {{ stat.player.nick_name }}">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{ stat.player.nick_name }}</h5>
+                            <p class="card-text">ADR: {{ stat.adr|floatformat:2 }}</p>
+                            <p class="card-text">ADR: {{ stat.kast|floatformat:2 }}</p>
+                          </div>
+
+                        <a href="{% url 'player_detail' stat.player.steam_id %}" class="btn btn-primary btn-sm mt-2 w-100">View Details</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Rounds Information -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="text-center">Rounds</h5>
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th>Winning Team</th>
+                        <th>End Reason</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for round in rounds %}
+                        <tr>
+                            <td>Round {{ round.round_num }}</td>
+                            <td>{{ round.winningTeam.name }}</td>
+                            <td>{{ round.roundEndReason }}</td>
+                            <td>
+                                <a href="#" class="btn btn-primary btn-sm">View Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+

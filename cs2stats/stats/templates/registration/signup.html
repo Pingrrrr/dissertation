@@ -40,6 +40,9 @@
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Signup</button>
                         </form>
+                        {% for message in messages %}
+                            <p id = "messages" >{{message}}</p>
+                        {% endfor%}
                     </div>
                     <div class="card-footer text-center">
                         <a href="{% url 'login' %}">Already have an account? Login</a>

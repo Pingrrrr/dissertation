@@ -1,19 +1,15 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class Team(models.Model):
     name = models.CharField(max_length=100, default='')
     players = models.ManyToManyField('Player', related_name='player_team')
-    team_img_url = models.URLField(blank=True)
+    team_img_url = models.URLField(blank=True,null=True)
 
     def __str__(self):
         return self.name
     
-class User(models.Model):
-    username = models.CharField(max_length=100, default='')
-    date_joined = models.DateTimeField()
-    def __str__(self):
-        return self.username
+
 
 
 class Player(models.Model):
@@ -23,7 +19,7 @@ class Player(models.Model):
     nationality = models.CharField(max_length=50, default='Unknown Nationality')
     age = models.IntegerField(default=0)
     bio = models.TextField(default='No biography available.')
-    image_url = models.URLField(blank=True, default='')  # Empty default for blank field
+    image_url = models.URLField(blank=True, default='')  
     steam_id = models.CharField(max_length=50, primary_key=True)
 
     def __str__(self):

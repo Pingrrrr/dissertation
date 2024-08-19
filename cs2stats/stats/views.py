@@ -1,19 +1,92 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
+from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
-from .models import Player, Match, Stat, Team, Series, Map
 from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
+from django.contrib import messages
 
+from .models import Player, Match, Stat, Team, Series, Map
+from .forms import CreateUserForm, CreateTeamForm
+from .decorators import unauthenicated_user, allowed_users
+
+from django.contrib.auth.decorators import login_required
 
 def index(request):
     teams = Team.objects.all()
     return render(request, 'stats/index.html', {'teams': teams})
 
+def logout(request):
+    auth_logout(request)
+    messages.info(request, "You have been logged out.")
+    return redirect('index')
+
+@unauthenicated_user
+def loginPage(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')  
+        else:
+            messages.error(request, 'Username or password is incorrect')
+            
+    return render(request, 'stats/login_register.html')
+
+# https://www.youtube.com/watch?v=tUqUdu0Sjyc&list=PL-51WBLyFTg2vW-_6XBoUpE7vpmoR3ztO&index=14
+@unauthenicated_user
+def signupPage(request):
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, 'Account was created for ' + username)
+            
+            
+            user = authenticate(request, username=username, password=form.cleaned_data.get('password1'))
+            if user is not None:
+                login(request, user)
+                return redirect('dashboard')
+    else:
+        form = CreateUserForm()
+        
+    return render(request, 'registration/signup.html', {'form': form})
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['Player', 'Coach'])
+def dashboard(request):
+    
+    user = request.user
+    player =Player.objects.get(user=user)
+    team = Team.objects.filter(players=player)
+    
+
+    return render(request, 'stats/dashboard.html', {'teams':team})
+
+
+def create_team(request):
+    if request.method == 'POST':
+        form = CreateTeamForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('team_detail')
+    else:
+        form = CreateTeamForm()
+    return render(request, 'stats/create_team.html', {'form': form})
+
 def stratPage(request):
     maps = Map.objects.all()
     return render(request, 'stats/stratPage.html', {'maps':maps})
+
+def d3(request):
+    maps = Map.objects.all()
+    return render(request, 'stats/d3_test.html', {'maps':maps})
 
 
 def team_detail(request, team_id):
@@ -36,14 +109,29 @@ def series_detail(request, series_id):
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
-    return render(request, 'stats/match_detail.html', {'match': match, 'rounds': match.round_set.all(), 'stats':match.stat_set.all().order_by('-adr')})
+    team_a_players = match.team_a.players.all()
+    team_b_players = match.team_b.players.all()
+
+    
+    team_a_stats = match.stat_set.filter(player__in=team_a_players).order_by('-adr')
+    team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
+
+    context = {
+        'match': match,
+        'rounds': match.round_set.all(),
+        'team_a_stats': team_a_stats,
+        'team_b_stats': team_b_stats,
+    }
+    
+    return render(request, 'stats/match_detail.html', context)
+
 
 
 
 def team_comms(request, team_id):
     team = get_object_or_404(Team, id=team_id)
     if not request.user.is_authenticated:
-        return redirect('login')  
+        return redirect('login')
     try:
         player = Player.objects.get(user=request.user)
     except Player.DoesNotExist:
@@ -68,30 +156,5 @@ def player_detail(request, player_id):
     })
 
 
-def loginPage(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            return redirect('index')  
-        else:
-            messages.error(request, 'Username or password is incorrect')
-            
-    return render(request, 'stats/login_register.html')
-
-def signupPage(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('index')  
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
 
 
