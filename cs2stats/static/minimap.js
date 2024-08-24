@@ -1,65 +1,90 @@
-const players = [
-    {id: 1, x: 50, y: 50},
-    {id: 2, x: 150, y: 120},
-    {id: 3, x: 250, y: 180},
-];
+var players = [];
+var gameUpdates = [];
 
-width = 300;
-height = 300;
+width = 600;
+height = 600;
 
 // adjust the data values to the size of the map
-const xScale = d3.scaleLinear().domain([-4831, 300]) .range([0, width]);
-const yScale = d3.scaleLinear().domain([0, 300]) .range([0, height]);
+// overpass
+//X -3959.9727 - -99.10431
+//Y -3474.6633 - 1624.767
 
-const svg = d3.select("#minimap");
+const xScale = d3.scaleLinear().domain([-3959.9727, -99.10431]).range([0, width]);
+const yScale = d3.scaleLinear().domain([-3474.6633, 1624.767]).range([0, height]);
 
-const playerCircles = svg.selectAll(".player")
-    .data(players)
-    .enter().append("circle")
-    .attr("class", "player")
-    .attr("cx", d => xScale(d.x))
-    .attr("cy", d => yScale(d.y))
-    .attr("r", 5);
+d3.json("round")
+    .then(function (data) {
+        const players = data.playerPositions[0]
+        const gameUpdates = data.playerPositions
+        const totalUpdates = data.playerPositions.length
 
-const gameUpdates = [
-    [
-        {id: 1, x: 60, y: 70},
-        {id: 2, x: 170, y: 130},
-        {id: 3, x: 230, y: 220},
-    ],
-    [
-        {id: 1, x: 80, y: 90},
-        {id: 2, x: 180, y: 140},
-        {id: 3, x: 210, y: 240},
-    ],
-    [
-        {id: 1, x: 100, y: 110},
-        {id: 2, x: 190, y: 150},
-        {id: 3, x: 190, y: 260},
-    ],
-    [
-        {id: 1, x: 110, y: 100},
-        {id: 2, x: 190, y: 145},
-        {id: 3, x: 210, y: 270},
-    ],
+        const svg = d3.select("#minimap");
 
-];
+        const progressBar = document.getElementById("progressBar");
+        const isClicked = false;
+        
 
-function updatePlayerPositions(newData) {
-    playerCircles.data(newData)
-        .transition()
-        .duration(500)
-        .attr("cx", d => xScale(d.x))
-        .attr("cy", d => yScale(d.y));
-}
+        const playerEnters =  svg.selectAll(".player")
+            .data(players, d => d.steamid)
+            .enter().append("g")
+            .attr("transform", d => {
+                return "translate(" + xScale(d.X)+","+ yScale(d.Y) + ")" ;
+            });
 
-let currentIndex = 0;
-function animateUpdates() {
-    if (currentIndex < gameUpdates.length) {
-        updatePlayerPositions(gameUpdates[currentIndex]);
-        currentIndex++;
-        setTimeout(animateUpdates, 1000); 
-    }
-}
+        const playerCircles = playerEnters.append("circle")
+            .attr("class", "player")
+            .attr("r", 5)
+            .attr("fill", d => d.team_name=="CT" ? "blue" : "yellow");
 
-animateUpdates();
+        const playerNames = playerEnters.append("text")
+            .attr("dx", -20)
+            .attr("dy", -10)
+            .text(d => d.name);
+
+
+        function updatePlayerPositions(newData) {
+            playerEnters.data(newData, d => d.steamid)
+                .attr("transform", function(d) {
+                    return "translate(" + xScale(d.X)+","+ yScale(d.Y) + ")";
+                });
+            console.log(newData[0].X)
+            console.log(newData[0].Y)
+        }
+
+        let currentIndex = 0;
+        function animateUpdates(index) {
+            
+            if (index < gameUpdates.length) {
+                currentIndex = index
+                updatePlayerPositions(gameUpdates[currentIndex]);
+                if(!isClicked){
+                    progressBar.value = Math.round((currentIndex/totalUpdates)*100)
+                }
+                
+                currentIndex++;
+                setTimeout(animateNextUpdate, 250);
+            }
+        }
+
+        function animateNextUpdate(){
+            animateUpdates(currentIndex)
+        }
+
+        animateUpdates(0);
+
+
+
+        progressBar.addEventListener("mousedown", function(){
+
+            //dont update the slider whiule  were clicking it
+            isClicked = true;
+
+        });
+        progressBar.addEventListener("mouseup", function() {
+            progress = this.value;
+            currentFrame = Math.round((progress / 100) * totalUpdates);
+            animateNextUpdate(currentFrame);
+            isClicked = false;
+        });
+
+    });

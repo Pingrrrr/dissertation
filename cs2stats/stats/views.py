@@ -6,9 +6,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
-from .models import Player, Match, Stat, Team, Series, Map
+from .models import Player, Match, Stat, Team, Series, Map, Round
 from .forms import CreateUserForm, CreateTeamForm
 from .decorators import unauthenicated_user, allowed_users
 
@@ -96,6 +96,11 @@ def stratPage(request):
 def d3(request):
     maps = Map.objects.all()
     return render(request, 'stats/d3_test.html', {'maps':maps})
+
+# getting data into d3 - https://stackoverflow.com/questions/26453916/passing-data-from-django-to-d3
+def d3_round(request):
+    round = Round.objects.get(id=35).ticks
+    return JsonResponse(round, safe=False)
 
 
 def team_detail(request, team_id):

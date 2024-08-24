@@ -14,7 +14,7 @@
     {% for team in teams %}
     <div class="col-md-4 mb-4">
         <div class="card">
-            <img src="{% static stat.team.team_img_url %} class="card-img-top" alt="{{ team.name }}">
+            <img src="{% static stat.team.team_img_url %}" class="card-img-top" alt="{{ team.name }}">
             <div class="card-body">
                 <h5 class="card-title">{{ team.name }}</h5>
                 <a href="{% url 'team_detail' team.id %}" class="btn btn-primary">View Team</a>

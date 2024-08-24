@@ -57,6 +57,7 @@ class Round(models.Model):
     ct_startEquipmentValue = models.IntegerField(default=0)
     t_endEquipmentValue = models.IntegerField(default=0)
     ct_endEquipmentValue = models.IntegerField(default=0)
+    ticks = models.JSONField(null=True)
     
 
     def __str__(self):

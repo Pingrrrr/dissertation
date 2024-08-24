@@ -16,6 +16,7 @@ urlpatterns = [
     path('teams/', views.teams, name='teams'),
     path('stratPage/', views.stratPage, name='stratPage'),
     path('d3/', views.d3, name='d3'),
+    path('d3/round/', views.d3_round, name='d3_round'),
     path('create-team/', views.create_team, name='create_team'),
 ]
 

@@ -1,5 +1,7 @@
 #https://stackoverflow.com/a/24456404
 import datetime
+import json
+import MySQLdb
 import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
@@ -36,6 +38,26 @@ def determineTrades(match, tradeTime, tickRate):
                 pk.save()
                 print(f"Round {round.round_num} : {pk.victim_ID} was traded by {kill.id}")
 
+def getPlayerPositions(dem, roundNum, tickRate):
+    roundTicks = dem.ticks[dem.ticks['round']==roundNum].sort_values(by=['tick'])
+    tickPrecision = round(tickRate/4) #dont need to store full tick rate (usually 64 ticks per second)
+
+    startTick = roundTicks.head(1)['tick'].values[0]
+    endTick = roundTicks.tail(1)['tick'].values[0]
+    ticks = list(range(startTick,endTick, tickPrecision)) 
+    roundTicks = roundTicks[roundTicks['tick'].isin(ticks)]
+    playerPos=[]
+
+    for tick in ticks:
+        roundTick = roundTicks[roundTicks['tick']==tick][['steamid','name','X','Y', 'health', 'armor_value','yaw', 'inventory', 'team_name']]
+        t=[]
+        for i in roundTick.index:
+            t.append(roundTick.loc[i].to_dict())
+
+        playerPos.append(t)
+    
+    return {"playerPositions":playerPos}
+
 
 
 def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
@@ -51,15 +73,14 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
     match.team_a=ctTeam
     match.team_b=tTeam
     match.map = dem.header['map_name'] 
-    match.series_id = series
+    match.series = series
     match.tick_rate=tickRate
     match.save()
 
 
     #round
     for index, round in dem.rounds.iterrows():
-        print(round['round'])
-        print(dem.events['round_announce_last_round_half']['round'])
+
 
         #for some reason the winner is returned as a number (3=CT, 2=T)
         if (round['winner'] == "CT") or (round['winner'] == 3):
@@ -67,8 +88,13 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
         else:
             winner = tTeam
 
-        r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], winningTeam=winner, roundEndReason=round['reason'])
+        #had to increase the max_allowed_packet in mysql to 100M
+        playerPos = getPlayerPositions(dem, round['round'], tickRate)
+
+
+        r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], winningTeam=winner, roundEndReason=round['reason'], ticks=playerPos)
         r.save()
+
 
         # use the last round of the half to work out when the teams swap sides (and it even works for overtime)
         if (round['round']-1) in dem.events['round_announce_last_round_half']['round'].tolist():
@@ -219,21 +245,23 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
 
 
 
-#dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem", ticks=True)
-dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m2-anubis.dem", ticks=True)
+dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem", ticks=True)
+#dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m2-anubis.dem", ticks=True)
 
 
 #series 1
 #series = Series.objects.get(id=1)
 #make a new series
-series = Series(winningTeam="Undecided", bestOf=3)
-series.save()
+
 
 #ct_team = dem.events['begin_new_match'][['ct_team_clan_name']]
 #t_team = dem.events['begin_new_match'][['t_team_clan_name']]
 
 team_a = Team.objects.get(id=1) #navi
 team_b = Team.objects.get(id=2) #vp
+
+series = Series(team_a=team_a, team_b=team_b, best_of=3)
+series.save()
 
 tickRate = determineTickRate(demo=dem)
 parseMatchFromDemo(dem=dem, ctTeam=team_a, tTeam=team_b, series=series, tickRate=tickRate)
