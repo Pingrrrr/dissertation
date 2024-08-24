@@ -1,22 +1,49 @@
 {% extends 'base.html' %}
-
-{% block title %}{{ player.name }} - Player Details{% endblock %}
+{% load static %}
+{% block title %}{{ player.nick_name }} - Player Details{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
             <div class="card player-detail-card mx-auto">
-                <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.name }}" loading="lazy">
+                <img src="{% static player.image_url %}" class="card-img-top" alt="Profile image of {{ player.nick_name }}" loading="lazy">
                 <div class="card-body text-center">
                     <h5 class="card-title">{{ player.nick_name }}</h5>
                     <ul class="list-group list-group-flush">
-                        {% for item in player.items %}
+                        {% for item in player.items.all %}
                             <li class="list-group-item">{{ item }}</li>
                         {% endfor %}
                     </ul>
-                    <a href="{% url 'team_detail' team.id %}" class="btn btn-primary mt-3">Back to Team</a>
+                    {% if player.player_team.exists %}
+                        {% for team in player.player_team.all %}
+                            <a href="{% url 'team_detail' team.id %}" class="btn btn-primary mt-3">Back to {{ team.name }}</a>
+                        {% endfor %}
+                    {% else %}
+                        <p class="mt-3">No team assigned.</p>
+                    {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Form Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="text-center">Recent Form</h5>
+            <div class="card-group">
+                {% for stat in recent_stats %}
+                <div class="card">
+                    <img src="{{ player.image_url }}" class="card-img-top" alt="Profile image of {{ player.nick_name }}">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">{{ stat.match.map }}</h5>
+                        <p class="card-text">Rating: {{ stat.rating|floatformat:2 }}</p>
+                        <p class="card-text">ADR: {{ stat.adr|floatformat:2 }}</p>
+                        <p class="card-text">KAST: {{ stat.kast|floatformat:2 }}</p>
+                    </div>
+                    <a href="{% url 'match_detail' stat.match.id %}" class="btn btn-primary btn-sm mt-2 w-100">Match Details</a>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>

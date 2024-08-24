@@ -4,8 +4,6 @@ const players = [
     {id: 3, x: 250, y: 180},
 ];
 
-
-
 width = 300;
 height = 300;
 

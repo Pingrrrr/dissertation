@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %} Team Communications {% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 text-white">
+    <h1 class="text-white">Team Communications</h1>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            Members List
+        </div>
+        <div class="card-body">
+            <ul id="membersList" class="list-group">
+                {% for player in team.players.all %}
+                    <li class="list-group-item bg-dark text-white">
+                        <strong>{{ player.nick_name }}</strong> - {{ player.name }}
+                        <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-sm btn-primary ml-2">View Details</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            Upcoming
+        </div>
+        <div class="card-body">
+            <button class="btn btn-primary">Open Calendar</button>
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            Upload Demo
+        </div>
+        <div class="card-body">
+            <input type="file" id="fileUpload" class="form-control mb-2 bg-dark text-white" />
+            <button class="btn btn-primary" id="uploadFileBtn">Upload File</button>
+            <div id="uploadedFiles" class="mt-3"></div>
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            Notifications
+        </div>
+        <div class="card-body">
+            <div id="notifications"></div>
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            To-Do List
+        </div>
+        <div class="card-body">
+            <ul id="todoList" class="list-group">
+                
+            </ul>
+            <form id="todoForm" class="mt-3">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-dark bg-dark text-white" id="todoItem" placeholder="New task..." required>
+                    <button class="btn btn-primary" type="submit">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

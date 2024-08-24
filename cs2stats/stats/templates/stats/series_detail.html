@@ -1,28 +1,33 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Series Overview{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     
+    <div class="row">
+        <div class="col text-center mb-4">
+            <h2 class="text-light">Series Winner: {{ series_winner.name }}</h2>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
         {% for match in matches %}
-                <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-3">
-                    <div class="card player-card">
-                        <img src="{{ match.map }} : {{match.match.id}}" class="card-img-top" alt="{{ match.map }}" loading="lazy">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">{{ match.match.map }} : {{match.match.id}}</h5>
-                            <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">{{ match.match.team_a }}:{{ match.team_a_wins }}</li>
-                                    <li class="list-group-item">{{ match.match.team_b }}:{{ match.team_b_wins }}</li>
-                            </ul>
-                            <a href="{% url 'match_detail' match.match.id %}" class="btn btn-primary mt-3">View Details</a>
-                        </div>
-                        
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <div class="card player-card bg-dark text-light">
+                    <img src="{% static 'default_image.jpg' %}" class="card-img-top" alt="{{ match.match.map }}" loading="lazy">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ match.match.map }} : {{ match.match.id }}</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-dark text-light">{{ match.match.team_a }}: {{ match.team_a_wins }}</li>
+                            <li class="list-group-item bg-dark text-light">{{ match.match.team_b }}: {{ match.team_b_wins }}</li>
+                        </ul>
+                        <a href="{% url 'match_detail' match.match.id %}" class="btn btn-primary mt-3">View Details</a>
                     </div>
                 </div>
+            </div>
         {% endfor %}
     </div>
 </div>
-
 {% endblock %}

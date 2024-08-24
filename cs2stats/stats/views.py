@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
+from django.http import HttpResponse
 
 from .models import Player, Match, Stat, Team, Series, Map
 from .forms import CreateUserForm, CreateTeamForm
@@ -61,13 +62,21 @@ def signupPage(request):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Player', 'Coach'])
 def dashboard(request):
-    
     user = request.user
-    player =Player.objects.get(user=user)
-    team = Team.objects.filter(players=player)
-    
+    player = Player.objects.get(user=user)
+    teams = Team.objects.filter(players=player)
 
-    return render(request, 'stats/dashboard.html', {'teams':team})
+    
+    recent_series = Series.objects.prefetch_related('matches').order_by('-id')[:10]
+    
+    context = {
+        'user': request.user,
+        'teams': teams,
+        'recent_series': recent_series,
+    }
+
+    return render(request, 'stats/dashboard.html', context)
+
 
 
 def create_team(request):
@@ -92,20 +101,55 @@ def d3(request):
 def team_detail(request, team_id):
     team = get_object_or_404(Team, id=team_id)
     #https://docs.djangoproject.com/en/dev/topics/db/queries/#complex-lookups-with-q-objects
-    matches = Match.objects.filter(Q(team_a = team) | Q(team_b = team))
-    series = Series.objects.filter(id__in=matches.values_list('series_id'))
-    return render(request, 'stats/team_detail.html', {'team': team, 'matches': matches, 'series':series})
+    
+
+    series = Series.objects.filter(Q(team_a=team) | Q(team_b=team))
+
+    return render(request, 'stats/team_detail.html', {
+        'team': team,
+        'series': series
+    })
+
 
 def series_detail(request, series_id):
     series = get_object_or_404(Series, id=series_id)
-    matches=[]
-    for match in series.match_set.all():
+    
+
+    if series.team_a is None or series.team_b is None:
+        return HttpResponse("One or both teams are not set for this series.", status=400)
+
+    matches = []
+    team_wins = {series.team_a.id: 0, series.team_b.id: 0} 
+
+    for match in series.matches.all():
         team_a_wins = match.round_set.filter(winningTeam=match.team_a).count()
         team_b_wins = match.round_set.filter(winningTeam=match.team_b).count()
-        winner = match.team_a if team_a_wins>team_b_wins else  match.team_b
-        matches.append({'match':match, 'team_a_wins':team_a_wins, 'team_b_wins':team_b_wins, 'winner':winner})
+        winner = match.team_a if team_a_wins > team_b_wins else match.team_b
+        matches.append({
+            'match': match,
+            'team_a_wins': team_a_wins,
+            'team_b_wins': team_b_wins,
+            'winner': winner
+        })
 
-    return render(request, 'stats/series_detail.html', {'series': series, 'matches': matches})
+        if team_a_wins > team_b_wins:
+            team_wins[series.team_a.id] += 1
+        else:
+            team_wins[series.team_b.id] += 1
+
+ 
+    series_winner_id = max(team_wins, key=team_wins.get)
+    series_winner = Team.objects.get(id=series_winner_id)
+
+   
+    series.winning_team = series_winner
+    series.save()
+
+    return render(request, 'stats/series_detail.html', {
+        'series': series,
+        'matches': matches,
+        'series_winner': series_winner
+    })
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
@@ -116,29 +160,46 @@ def match_detail(request, match_id):
     team_a_stats = match.stat_set.filter(player__in=team_a_players).order_by('-adr')
     team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
 
+    #https://www.w3schools.com/python/python_dictionaries.asp
+    #TO DO - put this in db
+    round_end_reasons = {
+        1: "Bomb detonation",
+        7: "Bomb defused",
+        8: "T Elimination",
+        9: "CT Elimination",
+        12: "TimeOut",
+        
+        
+    }
     context = {
         'match': match,
         'rounds': match.round_set.all(),
         'team_a_stats': team_a_stats,
         'team_b_stats': team_b_stats,
+        'round_end_reasons': round_end_reasons,
+
     }
     
     return render(request, 'stats/match_detail.html', context)
 
 
-
-
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['Player', 'Coach'])
 def team_comms(request, team_id):
     team = get_object_or_404(Team, id=team_id)
-    if not request.user.is_authenticated:
-        return redirect('login')
+    
+    
     try:
         player = Player.objects.get(user=request.user)
     except Player.DoesNotExist:
         raise PermissionDenied("You are not authorized to view this team.")
+    
+    
     if player not in team.players.all():
         raise PermissionDenied("You are not authorized to view this team.")
-    return render(request, 'teamComms.html', {'team': team})
+    
+    return render(request, 'stats/team_comms.html', {'team': team})
+
     
 
 def teams(request):
@@ -149,10 +210,14 @@ def teams(request):
 def player_detail(request, player_id):
     player = get_object_or_404(Player, steam_id=player_id)
     team = get_object_or_404(Team, players=player_id)
+    recent_stats = Stat.objects.filter(player=player).order_by('-match__date')[:5]
+
 
     return render(request, 'stats/player_detail.html', {
         'player': player,
-        'team': team
+        'team': team,
+        'recent_stats': recent_stats,
+        
     })
 
 

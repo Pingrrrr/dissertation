@@ -3,31 +3,60 @@
 {% block title %}Dashboard - CS Strategy Platform{% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
-        <header>
-            <h1>Welcome, {{ user.username }}!</h1>
-        </header>
-        
-        <section id="user-info" class="mt-4">
-            <h2>Your Teams</h2>
-            <ul class="list-group">
-                {% for team in teams %}
-                    <li class="list-group-item">{{ team.name }}</li>
-                {% empty %}
-                    <li class="list-group-item">You are not part of any teams yet.</li>
-                {% endfor %}
-            </ul>
-        </section>
-        
-        <section id="recent-matches" class="mt-4">
-            <h2>Recent Matches</h2>
-            <ul class="list-group">
-                {% for match in recent_matches %}
-                    <li class="list-group-item">{{ match.date }} - {{ match.result }}</li>
-                {% empty %}
-                    <li class="list-group-item">No recent matches found.</li>
-                {% endfor %}
-            </ul>
-        </section>
-    </div>
+<div class="container mt-4">
+    <header>
+        <h1 class="text-light">Welcome, {{ user.username }}!</h1>
+    </header>
+
+    <section id="user-info" class="mt-4 bg-dark text-light rounded p-3">
+        <h2>Your Teams</h2>
+        <ul class="list-group list-group-flush">
+            {% for team in teams %}
+            <li class="list-group-item bg-dark text-light">
+                <a href="{% url 'team_comms' team.id %}" class="text-light">{{ team.name }}</a>
+            </li>
+            {% empty %}
+            <li class="list-group-item bg-dark text-light">You are not part of any teams yet.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section id="recent-series" class="mt-4 bg-dark text-light rounded p-3">
+        <h2>Recent Series</h2>
+        <ul class="list-group list-group-flush">
+            {% for series in recent_series %}
+            <li class="list-group-item bg-dark text-light">
+                <a href="{% url 'series_detail' series.id %}" class="text-light">
+                    <strong>{{ series.team_a.name }} vs {{ series.team_b.name }}</strong>
+                </a>
+                <p>
+                    Winner:
+                    {% if series.winning_team %}
+                    {{ series.winning_team.name }}
+                    {% else %}
+                    TBD
+                    {% endif %}
+                </p>
+                <p>Best of: {{ series.best_of }}</p>
+                <ul>
+                    {% for match in series.matches.all %}
+                    <li>
+                        {{ match.date }} - Map: {{ match.map }} - Winner:
+                        {% if match.team_a == series.winning_team %}
+                        {{ match.team_a.name }}
+                        {% elif match.team_b == series.winning_team %}
+                        {{ match.team_b.name }}
+                        {% else %}
+                        TBD
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% empty %}
+            <li class="list-group-item bg-dark text-light">No recent series found.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
 {% endblock %}

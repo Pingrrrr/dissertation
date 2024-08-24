@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ team.name }} - Team Details{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     <h1 class="text-center">{{ team.name }}</h1>
-    <!-- Row for Player Cards -->
+
     <div class="row justify-content-center">
         {% for player in team.players.all %}
             {% if forloop.counter <= 5 %}
@@ -15,28 +16,7 @@
                         <div class="card-body text-center">
                             <h5 class="card-title">{{ player.nick_name }}</h5>
                             <ul class="list-group list-group-flush">
-                                {% for item in player.items %}
-                                    <li class="list-group-item">{{ item }}</li>
-                                {% endfor %}
-                            </ul>
-                            <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-primary mt-3">View Details</a>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-    </div>
-    <!-- Row for Coach Card -->
-    <div class="row justify-content-center">
-        {% for player in team.players.all %}
-            {% if forloop.counter == 6 %}
-                <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
-                    <div class="card coach-card">
-                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.nick_name }}" loading="lazy">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ player.nick_name }} - Coach</h5>
-                            <ul class="list-group list-group-flush">
-                                {% for item in player.items %}
+                                {% for item in player.items.all %}
                                     <li class="list-group-item">{{ item }}</li>
                                 {% endfor %}
                             </ul>
@@ -48,26 +28,52 @@
         {% endfor %}
     </div>
 
-        <!-- Row for recent games -->
-        <div class="row justify-content-center">
-            {% for s in series %}
-                {% if forloop.counter <= 5 %}
-                    <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
-                        <div class="card player-card">
-                            <img  class="card-img-top" alt="{{ match.map }}" loading="lazy">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ s.winningTeam }}</h5>
-                                <ul class="list-group list-group-flush">
-                                    {% for m in s.match_set.all %}
-                                        <li>{{ m.map }}</li>
-                                    {% endfor %}
-                                </ul>
-                                <a href="{% url 'series_detail' s.id %}" class="btn btn-primary mt-3">View Details</a>
-                            </div>
+    <div class="row justify-content-center">
+        {% for player in team.players.all %}
+            {% if forloop.counter == 6 %}
+                <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
+                    <div class="card coach-card">
+                        <img src="{{ player.image_url }}" class="card-img-top" alt="{{ player.nick_name }}" loading="lazy">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ player.nick_name }} - Coach</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for item in player.items.all %}
+                                    <li class="list-group-item">{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                            <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-primary mt-3">View Details</a>
                         </div>
                     </div>
-                {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <section id="recent-matches" class="mt-4">
+        <h2 class="text-center">Recent Series</h2>
+        <div class="row justify-content-center">
+            {% for s in series %}
+            <div class="col-12 col-md-6 col-lg-4 mb-3 text-center">
+                <div class="card player-card">
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ s.winningTeam }}</h5>
+                        <ul class="list-group list-group-flush">
+                            {% for m in s.match_set.all %}
+                                <li>{{ m.map }}</li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{% url 'series_detail' s.id %}" class="btn btn-primary mt-3">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p>No recent matches found.</p>
+            </div>
             {% endfor %}
         </div>
+    </section>
+    
 </div>
 {% endblock %}

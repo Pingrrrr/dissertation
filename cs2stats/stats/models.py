@@ -26,19 +26,20 @@ class Player(models.Model):
         return self.nick_name
 
 class Series(models.Model):
-    winningTeam = models.CharField(max_length=100, default='Unknown')
-    bestOf = models.IntegerField(default=1)
-
+    team_a = models.ForeignKey(Team, related_name='team_a_series', on_delete=models.CASCADE)
+    team_b = models.ForeignKey(Team, related_name='team_b_series', on_delete=models.CASCADE)
+    winning_team = models.ForeignKey(Team, related_name='winning_team_series', null=True, blank=True, on_delete=models.SET_NULL)
+    best_of = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"{self.id} winner is {self.winningTeam}"
-    
+        return f"Series {self.id}: {self.team_a} vs {self.team_b} (Winner: {self.winning_team})"
+
 class Match(models.Model):
     date = models.DateTimeField()
     team_a = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_a_matches', null=True, blank=True)
-    team_b = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_b_matches',null=True, blank=True)
+    team_b = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_b_matches', null=True, blank=True)
     map = models.CharField(max_length=100, default='Unknown')
-    series_id = models.ForeignKey(Series, on_delete=models.SET_NULL, null=True, blank=True)
+    series = models.ForeignKey(Series, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches')
     tick_rate = models.IntegerField(default=64)
 
     def __str__(self):
