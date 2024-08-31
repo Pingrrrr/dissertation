@@ -7,9 +7,11 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
+import json
+from django.views.decorators.http import require_POST
 
-from .models import Player, Match, Stat, Team, Series, Map, Round
-from .forms import CreateUserForm, CreateTeamForm
+from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment
+from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
 from .decorators import unauthenicated_user, allowed_users
 
 from django.contrib.auth.decorators import login_required
@@ -93,6 +95,54 @@ def stratPage(request):
     maps = Map.objects.all()
     return render(request, 'stats/stratPage.html', {'maps':maps})
 
+
+
+def round_view(request, round_id):
+    maps = Map.objects.all()
+    user = request.user
+    player = get_object_or_404(Player, user=user)
+    team = Team.objects.filter(players=player).first()  
+    round = get_object_or_404(Round, id=round_id)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST, team=team)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.round = round
+            comment.author = user
+            comment.save()
+            form.save_m2m()  
+
+            
+            for tagged_player in comment.tagged_players.all():
+                Notification.objects.create(
+                    player=tagged_player,
+                    message=f"You were tagged in a comment by {user.username} on Round {round.id}.",
+                    round=round
+                )
+            
+            return redirect('round_view', round_id=round.id)
+    else:
+        form = CommentForm(team=team)
+
+    
+    comment_to_highlight = Comment.objects.filter(round=round, id=request.GET.get('comment_id')).first()
+
+    return render(request, 'stats/round_view.html', {
+        'maps': maps,
+        'round': round,
+        'form': form,
+        'comment_to_highlight': comment_to_highlight,
+        'team': team,
+    })
+
+
+
+def round_ticks(request, round_id):
+    round = Round.objects.get(id=round_id).ticks
+    return JsonResponse(round, safe=False)
+
+
 def d3(request):
     maps = Map.objects.all()
     return render(request, 'stats/d3_test.html', {'maps':maps})
@@ -158,54 +208,73 @@ def series_detail(request, series_id):
 
 def match_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
+    
     team_a_players = match.team_a.players.all()
     team_b_players = match.team_b.players.all()
 
-    
     team_a_stats = match.stat_set.filter(player__in=team_a_players).order_by('-adr')
     team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
 
-    #https://www.w3schools.com/python/python_dictionaries.asp
-    #TO DO - put this in db
     round_end_reasons = {
         1: "Bomb detonation",
         7: "Bomb defused",
         8: "T Elimination",
         9: "CT Elimination",
         12: "TimeOut",
-        
-        
     }
+    
+    related_demos = UploadedDemo.objects.filter(team=match.team_a)
+
     context = {
         'match': match,
         'rounds': match.round_set.all(),
         'team_a_stats': team_a_stats,
         'team_b_stats': team_b_stats,
         'round_end_reasons': round_end_reasons,
-
+        'related_demos': related_demos,  
     }
     
     return render(request, 'stats/match_detail.html', context)
-
 
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Player', 'Coach'])
 def team_comms(request, team_id):
     team = get_object_or_404(Team, id=team_id)
-    
+    user = request.user
+
     
     try:
-        player = Player.objects.get(user=request.user)
+        player = Player.objects.get(user=user)
     except Player.DoesNotExist:
         raise PermissionDenied("You are not authorized to view this team.")
     
     
     if player not in team.players.all():
         raise PermissionDenied("You are not authorized to view this team.")
-    
-    return render(request, 'stats/team_comms.html', {'team': team})
 
     
+    notifications = player.notifications.all()[:5]  # Limit to 5 notifications
+
+    if request.method == 'POST':
+        form = DemoUploadForm(request.POST, request.FILES, team=team)
+        if form.is_valid():
+            demo = form.save(commit=False)
+            demo.team = team
+            demo.uploaded_by = player
+            demo.save()
+            return redirect('team_comms', team_id=team.id)
+    else:
+        form = DemoUploadForm(team=team)
+    
+    uploaded_demos = UploadedDemo.objects.filter(team=team)
+
+    return render(request, 'stats/team_comms.html', {
+        'team': team,
+        'form': form,
+        'uploaded_demos': uploaded_demos,
+        'notifications': notifications,  
+    })
+
 
 def teams(request):
     teams = Team.objects.all()
@@ -226,5 +295,13 @@ def player_detail(request, player_id):
     })
 
 
+def view_notifications(request):
+    player = Player.objects.get(user=request.user)
+    player.notifications.filter(is_read=False).update(is_read=True)
+
+    context = {
+        'notifications': player.notifications.all(),
+    }
+    return render(request, 'notifications.html', context)
 
 

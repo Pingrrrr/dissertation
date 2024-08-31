@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %} Team Communications {% endblock %}
 
 {% block content %}
-
 <div class="container mt-4 text-white">
     <h1 class="text-white">Team Communications</h1>
 
@@ -14,10 +13,11 @@
         <div class="card-body">
             <ul id="membersList" class="list-group">
                 {% for player in team.players.all %}
-                    <li class="list-group-item bg-dark text-white">
-                        <strong>{{ player.nick_name }}</strong> - {{ player.name }}
-                        <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-sm btn-primary ml-2">View Details</a>
-                    </li>
+                <li class="list-group-item bg-dark text-white">
+                    <strong>{{ player.nick_name }}</strong> - {{ player.real_name }}
+                    <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-sm btn-primary ml-2">View
+                        Details</a>
+                </li>
                 {% endfor %}
             </ul>
         </div>
@@ -25,32 +25,116 @@
 
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
-            Upcoming
+            Saved Strategies
         </div>
         <div class="card-body">
-            <button class="btn btn-primary">Open Calendar</button>
+            <ul class="list-group">
+                {% for strategy in strategies %}
+                <li class="list-group-item bg-dark text-white">
+                    <strong>{{ strategy.name }}</strong>: {{ strategy.description }}
+                    <a href="{% url 'strategy_detail' strategy.id %}" class="btn btn-sm btn-primary ml-2">View Details</a>
+                    <a href="{% url 'edit_strategy' strategy.id %}" class="btn btn-sm btn-warning ml-2">Edit</a>
+                    <a href="{% url 'delete_strategy' strategy.id %}" class="btn btn-sm btn-danger ml-2">Delete</a>
+                </li>
+                {% empty %}
+                <li class="list-group-item bg-dark text-white">
+                    No saved strategies available.
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 
-    <div class="card mb-4 bg-dark text-white">
-        <div class="card-header">
-            Upload Demo
+    <form id="commentForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card mb-4 bg-dark text-white">
+            <div class="card-header">
+                Upload Demo
+            </div>
+            <div class="card-body">
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Upload File</button>
+                {% if form.errors %}
+                <div class="alert alert-danger mt-2">
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+            </div>
         </div>
-        <div class="card-body">
-            <input type="file" id="fileUpload" class="form-control mb-2 bg-dark text-white" />
-            <button class="btn btn-primary" id="uploadFileBtn">Upload File</button>
-            <div id="uploadedFiles" class="mt-3"></div>
-        </div>
-    </div>
+    </form>
 
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
-            Notifications
+            Uploaded Demos
         </div>
         <div class="card-body">
-            <div id="notifications"></div>
+            <ul class="list-group">
+                {% for demo in uploaded_demos %}
+                <li class="list-group-item bg-dark text-white">
+                    <strong>{{ demo.file.name }}</strong> by {{ demo.uploaded_by.nick_name }}
+                    <span class="timestamp"> - {{ demo.uploaded_at }}</span>
+
+                    {% if demo.series %}
+                    <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
+                        Series</a>
+                    {% endif %}
+                    <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
+
+
+  <!-- Notifications Card -->
+<div class="card mb-4 bg-dark text-white">
+    <div class="card-header">
+        Notifications
+        <div class="float-end">
+            <form method="post" action="" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-success">Mark All as Read</button>
+            </form>
+            <form method="post" action="" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">Clear All</button>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="notifications">
+            {% if notifications %}
+                <ul class="list-group">
+                    {% for notification in notifications %}
+                        <li class="list-group-item bg-dark text-white">
+                            <strong>
+                                {% if notification.round %}
+                                    <a href="{% url 'round_view' notification.round.id %}" class="text-light">
+                                        Round {{ notification.round.id }}
+                                    </a>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </strong>: 
+                            {{ notification.message }}
+                            <small class="timestamp">{{ notification.created_at }}</small>
+                            <div class="float-end">
+                                <form method="post" action="" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-primary">Add to To-Do</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No notifications available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
 
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
@@ -58,15 +142,33 @@
         </div>
         <div class="card-body">
             <ul id="todoList" class="list-group">
-                
             </ul>
             <form id="todoForm" class="mt-3">
                 <div class="input-group">
-                    <input type="text" class="form-control form-control-dark bg-dark text-white" id="todoItem" placeholder="New task..." required>
+                    <input type="text" class="form-control form-control-dark bg-dark text-white" id="todoItem"
+                        placeholder="New task..." required>
                     <button class="btn btn-primary" type="submit">Add Task</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+
+<style>
+    .notification-item {
+        padding: 10px;
+    }
+
+    .notification-item.unread {
+        font-weight: bold;
+    }
+
+    .notification-item.read {
+        color: #b0b0b0;
+    }
+</style>
+
+
+
 {% endblock %}

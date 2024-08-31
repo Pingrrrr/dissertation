@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CS Strategy Platform{% endblock %}
+
+{% block content %}
+
+<script src=" https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js "></script>
+{% load static %}
+
+<style type="text/css">
+    .bgimg {
+        background-image: url("{% static 'maps/Overpass.png' %}");
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .highlight {
+        border: 2px solid yellow;
+        background-color: #ffffdd;
+    }
+
+    .comment {
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #2e2d2d;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .comment strong {
+        color: #ffd900;
+        /* Highlight the author's name */
+    }
+
+    .form-section {
+        border-radius: 5px;
+        padding: 20px;
+        background-color: #3b3b3b;
+        color: #ffffff;
+        margin-top: 20px;
+    }
+
+    .form-control {
+        border-radius: 0.25rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <section id="user-info" class="mt-4 bg-dark text-light rounded p-3">
+        <div class="bgimg" width="600" height="600">
+            <svg id="minimap" class="minimap" width="600" height="600">
+            </svg>
+        </div>
+        <input id="progressBar" type="range" value="0" min="0" max="100">
+    </section>
+</div>
+
+
+<div class="container mt-4">
+
+    <section id="comments" class="mt-4 bg-dark text-light rounded p-3">
+        <h4>Comments</h4>
+        {% if round.comments.all %}
+        <div class="list-group">
+            {% for comment in round.comments.all %}
+            <div id="comment-{{ comment.id }}"
+                class="comment {% if comment == comment_to_highlight %}highlight{% endif %}">
+                <strong>{{ comment.author.username }}</strong>: {{ comment.text }}
+                {% if comment == comment_to_highlight %}
+                <span class="badge bg-primary">Tagged</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center">No comments yet.</p>
+        {% endif %}
+    </section>
+
+
+    <section class="form-section">
+        <h4>Add a Comment</h4>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Add Comment</button>
+        </form>
+    </section>
+</div>
+
+<script type="text/javascript">
+    console.log('Round ID ' + '{{ round.id }}');
+    var round_id = '{{ round.id }}';
+</script>
+
+<script src="{% static 'minimap.js' %}"></script>
+{% endblock %}

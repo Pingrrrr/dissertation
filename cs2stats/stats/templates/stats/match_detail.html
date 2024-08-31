@@ -6,6 +6,7 @@
 
 {% block content %}
 <div class="container my-4">
+    <!-- Match Overview -->
     <div class="row">
         <div class="col text-center">
             <h2>{{ match.team_a.name }} vs {{ match.team_b.name }}</h2>
@@ -13,10 +14,11 @@
         </div>
     </div>
 
+    <!-- Team A Player Stats -->
     <div class="row mt-4">
         <div class="col-12">
             <h5 class="text-center">{{ match.team_a.name }} Player Stats</h5>
-            <div class="card-group ">
+            <div class="card-group">
                 {% for stat in team_a_stats %}
                 <div class="card">
                     <img src="{% static stat.player.image_url %}" class="card-img-top"
@@ -35,10 +37,11 @@
         </div>
     </div>
 
+    <!-- Team B Player Stats -->
     <div class="row mt-4">
         <div class="col-12">
             <h5 class="text-center">{{ match.team_b.name }} Player Stats</h5>
-            <div class="card-group ">
+            <div class="card-group">
                 {% for stat in team_b_stats %}
                 <div class="card">
                     <img src="{% static stat.player.image_url %}" class="card-img-top"
@@ -57,6 +60,7 @@
         </div>
     </div>
 
+    <!-- Rounds Table -->
     <div class="row mt-4">
         <div class="col-12">
             <h5 class="text-center">Rounds</h5>
@@ -75,8 +79,9 @@
                         <td>Round {{ round.round_num }}</td>
                         <td>{{ round.winningTeam.name }}</td>
                         <td>{{ round_end_reasons|dict_key:round.roundEndReason }}</td>
-                        <td> print((typeround.roundEndReason))
-                            <a href="#" class="btn btn-primary btn-sm">View Details</a>
+                        <td>
+                            <a href="{% url 'round_view' round.round_num %}" 
+                                class="btn btn-primary btn-sm">View Details</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -84,5 +89,4 @@
             </table>
         </div>
     </div>
-</div>
 {% endblock %}

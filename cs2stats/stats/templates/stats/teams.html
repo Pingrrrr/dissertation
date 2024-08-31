@@ -1,20 +1,21 @@
 {% extends 'base.html' %}
 
 {% block title %}Team List{% endblock %}
-{%load static%}
+{% load static %}
 {% block content %}
-<h1 class="mb-4">Teams</h1>
+<h1 class="mb-4 text-center">Teams</h1>
 
-
-<div class="mb-4">
+<div class="mb-4 text-center">
     <a href="{% url 'create_team' %}" class="btn btn-success">Create Your Own Team</a>
 </div>
 
 <div class="row">
     {% for team in teams %}
     <div class="col-md-4 mb-4">
-        <div class="card">
-            <img src="{% static stat.team.team_img_url %}" class="card-img-top" alt="{{ team.name }}">
+        <div class="card text-center team-card">
+            <div class="card-img-container">
+                <img src="{% static team.team_img_url %}" class="card-img-small" alt="{{ team.name }}">
+            </div>
             <div class="card-body">
                 <h5 class="card-title">{{ team.name }}</h5>
                 <a href="{% url 'team_detail' team.id %}" class="btn btn-primary">View Team</a>
@@ -23,4 +24,36 @@
     </div>
     {% endfor %}
 </div>
+
+<style>
+.team-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-img-container {
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+    height: 150px;          
+    overflow: hidden;       
+}
+
+.card-img-small {
+    max-width: 100%;
+    max-height: 100%;       
+    object-fit: contain;    
+}
+
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+}
+</style>
 {% endblock %}

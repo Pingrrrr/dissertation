@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Team(models.Model):
     name = models.CharField(max_length=100, default='')
     players = models.ManyToManyField('Player', related_name='player_team')
@@ -9,9 +10,6 @@ class Team(models.Model):
     def __str__(self):
         return self.name
     
-
-
-
 class Player(models.Model):
     user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
     nick_name = models.CharField(max_length=100, default='Unknown Nickname')
@@ -164,6 +162,39 @@ class SeriesReviewComment(models.Model):
 
     def __str__(self):
         return f"{self.series_review_id}"
+    
+class Comment(models.Model):
+    round = models.ForeignKey('Round', on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
+    tagged_players = models.ManyToManyField('Player', related_name='tagged_in_comments', blank=True)
+    timestamp = models.CharField(max_length=50)  
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on Round {self.round.id} at {self.timestamp}"
+
+    class Meta:
+        ordering = ['created_at']
+    
+class Notification(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    round = models.ForeignKey('Round', on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+
+class UploadedDemo(models.Model):
+    team = models.ForeignKey(Team, related_name='demos', on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(Player, on_delete=models.CASCADE)
+    series = models.ForeignKey(Series, related_name='demos', on_delete=models.CASCADE, null=True, blank=True)
+    file = models.FileField(upload_to='demos/')
+    description = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.file.name} uploaded by {self.uploaded_by.nick_name} for {self.team.name}"
 
 
 
