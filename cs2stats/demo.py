@@ -7,7 +7,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
 from django.utils import timezone
 from awpy import Demo
-from stats.models import Player, Match, Stat, Team, Series, Round, Kills, BombEvent
+from stats.models import Grenade, Player, Match, PlayerTick, Stat, Team, Series, Round, Kills, BombEvent, WeaponFires
 #https://docs.djangoproject.com/en/5.0/ref/exceptions/
 from django.core.exceptions import ObjectDoesNotExist
 from awpy.stats import adr
@@ -38,25 +38,153 @@ def determineTrades(match, tradeTime, tickRate):
                 pk.save()
                 print(f"Round {round.round_num} : {pk.victim_ID} was traded by {kill.id}")
 
+
+players={}
+def getPlayer(steamId):
+    if steamId in players.keys():
+        return players[steamId]
+    else:
+        try:
+            player = Player.objects.get(steam_id=steamId)
+            players[steamId] = player
+        except Player.DoesNotExist:
+            print(f"Player with steam_id {steamId} not found")
+            return None
+
+
+
 def getPlayerPositions(dem, roundNum, tickRate):
     roundTicks = dem.ticks[dem.ticks['round']==roundNum].sort_values(by=['tick'])
+    grenadeTicks = dem.grenades[dem.grenades['round']==roundNum].sort_values(by=['tick'])
     tickPrecision = round(tickRate/4) #dont need to store full tick rate (usually 64 ticks per second)
+
+    weaponFiresTicks = dem.weapon_fires[dem.weapon_fires['round']==roundNum]
+    weaponFiresTicks = weaponFiresTicks[['player_steamid','player_name','tick','player_X','player_Y','player_Z','player_yaw','weapon','player_accuracy_penalty']]
+
 
     startTick = roundTicks.head(1)['tick'].values[0]
     endTick = roundTicks.tail(1)['tick'].values[0]
     ticks = list(range(startTick,endTick, tickPrecision)) 
     roundTicks = roundTicks[roundTicks['tick'].isin(ticks)]
+    grenadeTicks = grenadeTicks[grenadeTicks['tick'].isin(ticks)]
     playerPos=[]
+    grenades=[]
+    weaponFires=[]
 
+    lastTick = 0
     for tick in ticks:
-        roundTick = roundTicks[roundTicks['tick']==tick][['steamid','name','X','Y', 'health', 'armor_value','yaw', 'inventory', 'team_name']]
+        roundTick = roundTicks[roundTicks['tick']==tick][['tick','steamid','name','X','Y', 'health', 'armor_value','yaw', 'inventory', 'team_name']]
         t=[]
         for i in roundTick.index:
             t.append(roundTick.loc[i].to_dict())
 
+        grenadeTick = grenadeTicks[grenadeTicks['tick']==tick][['entity_id','tick','thrower_steamid','thrower','grenade_type','X','Y','Z']]
+        grenadesTick=[]
+        for g in grenadeTick.index:
+            grenadesTick.append(grenadeTick.loc[g].to_dict())
+
+        weaponFiresTick = weaponFiresTicks[(weaponFiresTicks['tick']<=tick) & (weaponFiresTicks['tick']>lastTick)]
+        ww=[]
+        for w in weaponFiresTick.index:
+            ww.append(weaponFiresTick.loc[w].to_dict())
+
+
         playerPos.append(t)
+        grenades.append(grenadesTick)
+        weaponFires.append(ww)
+        lastTick = tick
     
-    return {"playerPositions":playerPos}
+
+    return {"playerPositions":playerPos, "grenades":grenades, "weaponFires":weaponFires}
+
+def processPlayerTicks(dem, match):
+    print("Processing player ticks")
+    player_ticks = []
+    for index, tick in dem.ticks.iterrows():
+        try:
+            round = Round.objects.filter(match_id=match).get(round_num=tick['round'])
+        except ObjectDoesNotExist:
+            print(f"round_num {tick['round']} does not exist for match {match}")
+            continue
+        try:
+            player = Player.objects.get(steam_id=tick['steamid'])
+        except Player.DoesNotExist:
+            print(f"Attacker with steam_id {tick['steamid']} does not exist")
+            player = None
+        
+        pt = PlayerTick(
+            round=round,
+            player = player,
+            name = tick['name'],
+            side = tick['team_name'],
+            tick = tick['tick'],
+            health = tick['health'],
+            armor_value = tick['armor_value'],
+            x= tick['X'],
+            y= tick['Y'],
+            z= tick['Z'],
+            yaw = tick['yaw'],
+            inventory = tick['inventory'],
+            current_equip_value = tick['current_equip_value'],
+            flash_duration = tick['flash_duration']
+            )
+
+        player_ticks.append(pt)
+    PlayerTick.objects.bulk_create(player_ticks)
+
+def processGrenades(dem, round):
+    print(f"Processing grenades for round {round.round_num}")
+    grenades = []
+    for index, grenade in dem.grenades.iterrows():
+        player = getPlayer(grenade['thrower_steamid'])
+        
+        g = Grenade(
+            round=round,
+            thrower = player,
+            thrower_name = grenade['thrower'],
+            grenade_type = grenade['grenade_type'],
+            tick = grenade['tick'],
+            x = grenade['X'],
+            y = grenade['Y'],
+            z = grenade['Z'],
+            )
+
+        grenades.append(g)
+        print(index)
+    Grenade.objects.bulk_create(grenades)
+
+def processWeaponFires(dem, match):
+    print("Processing weapon fires")
+    weapon_fires = []
+    for index, fire in dem.weapon_fires.iterrows():
+        try:
+            round = Round.objects.filter(match_id=match).get(round_num=fire['round'])
+        except ObjectDoesNotExist:
+            print(f"round_num {fire['round']} does not exist for match {match}")
+            continue
+        try:
+            player = Player.objects.get(steam_id=fire['player_steamid'])
+        except Player.DoesNotExist:
+            print(f"Attacker with steam_id {fire['player_steamid']} does not exist")
+            player = None
+        
+        wf = WeaponFires(
+            round = round,
+            player = player,
+            name = fire['player_name'],
+            side = fire['player_team_name'],
+            tick = fire['tick'],
+            x = fire['player_X'],
+            y = fire['player_Y'],
+            z = fire['player_Z'],
+            yaw = fire['player_yaw'],
+            weapon = fire['weapon'],
+            zoom_level = fire['player_zoom_lvl'],
+            accuracy_penalty = fire['player_accuracy_penalty'],
+            )
+
+        weapon_fires.append(wf)
+    WeaponFires.objects.bulk_create(weapon_fires)
 
 
 
@@ -94,6 +222,7 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
 
         r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], winningTeam=winner, roundEndReason=round['reason'], ticks=playerPos)
         r.save()
+        #processGrenades(dem, r)
 
 
         # use the last round of the half to work out when the teams swap sides (and it even works for overtime)
@@ -157,6 +286,8 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
     determineTrades(match=match, tradeTime=5, tickRate=tickRate)
 
     #bomb events
+    print("Processing bomb events")
+    bomb_events = []
     for index, bomb_event in dem.bomb.iterrows():
         try:
             round = Round.objects.filter(match_id=match).get(round_num=bomb_event['round'])
@@ -168,6 +299,7 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
             round=round,
             event=bomb_event['event'],
             site=bomb_event['site'],
+            tick=bomb_event['tick'],
             x=bomb_event['X'],
             y=bomb_event['Y'],
             z=bomb_event['Z'],
@@ -176,11 +308,21 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
             ticks_since_bomb_plant	= bomb_event['ticks_since_bomb_plant'] if not pd.isna(bomb_event['ticks_since_bomb_plant']) else 0,
         )
 
-        b.save()
+        bomb_events.append(b)
+    BombEvent.objects.bulk_create(bomb_events)
 
+    #player ticks
+    #processPlayerTicks(dem, match)
+    
 
+    #grenades
+    
+
+    #weapon fires
+    
 
     #stats
+    print("Processing stats")
     adr_stats = adr(dem)
     kast_stats = kast(dem, trade_ticks=tickRate)
     rating_stats = rating(dem)

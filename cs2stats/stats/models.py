@@ -57,14 +57,34 @@ class Round(models.Model):
     ct_endEquipmentValue = models.IntegerField(default=0)
     ticks = models.JSONField(null=True)
     
-
     def __str__(self):
         return f"{self.id}"
+    
+class PlayerTick(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
+    name = models.CharField(max_length=250)
+    side = models.CharField(max_length=25)
+    tick = models.IntegerField(null=False)
+    health = models.FloatField(null=False)
+    armor_value = models.FloatField(null=True, default=0.0)
+    x= models.FloatField(default=0.0)
+    y= models.FloatField(default=0.0)
+    z= models.FloatField(default=0.0)
+    yaw = models.FloatField(default=0.0)
+    inventory = models.CharField(max_length=500)
+    current_equip_value = models.FloatField(default=0.0)
+    flash_duration = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return f"{self.player.id} : {self.tick}"
+
     
 class BombEvent(models.Model):
     round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
     event = models.CharField(max_length=50)
     site = models.CharField(max_length=50)
+    tick = models.IntegerField(default=0)
     x = models.FloatField(default=0.0)
     y = models.FloatField(default=0.0)
     z = models.FloatField(default=0.0)
@@ -76,6 +96,31 @@ class BombEvent(models.Model):
     def __str__(self):
         return f"{self.id}"
     
+class Grenade(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
+    thrower = models.OneToOneField(Player, on_delete=models.SET_NULL, null=True)
+    thrower_name = models.CharField(max_length=250)
+    grenade_type = models.CharField(max_length=25)
+    tick = models.IntegerField(default=0)
+    x = models.FloatField(default=0.0)
+    y = models.FloatField(default=0.0)
+    z = models.FloatField(default=0.0)
+
+class WeaponFires(models.Model):
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, null=False)
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
+    name = models.CharField(max_length=250)
+    side = models.CharField(max_length=25)
+    tick = models.IntegerField(default=0)
+    x = models.FloatField(default=0.0)
+    y = models.FloatField(default=0.0)
+    z = models.FloatField(default=0.0)
+    yaw = models.FloatField(default=0.0)
+    weapon = models.CharField(max_length=250)
+    zoom_level = models.FloatField(default=0.0)
+    accuracy_penalty = models.FloatField(default=0.0)
+    
+
     
 class Kills(models.Model):
     round_ID = models.ForeignKey(Round, on_delete=models.SET_NULL, null=True, blank=True)

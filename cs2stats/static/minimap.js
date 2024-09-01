@@ -17,11 +17,23 @@ const mapWidth = 1024 * 5.2
 const xScale = d3.scaleLinear().domain([-4831, (-4831 + mapWidth)]).range([0, width]);
 const yScale = d3.scaleLinear().domain([1781, (1781 - mapWidth)]).range([0, height]);
 
-console.log('Round ID '+ round_id );
 
-d3.json("../ticks/"+round_id)
+//['smoke', 'flashbang', 'molotov', 'he_grenade', 'incendiary_grenade']
+let grenadeColours = new Map();
+grenadeColours.set('smoke','gray');
+grenadeColours.set('flashbang','white');
+grenadeColours.set('molotov','orange');
+grenadeColours.set('he_grenade','red');
+grenadeColours.set('incendiary_grenade','orange');
+
+
+console.log('Round ID ' + round_id);
+
+d3.json("../ticks/" + round_id)
     .then(function (data) {
         const players = data.playerPositions[0]
+        const grenades = data.grenades
+        const weaponFires = data.weaponFires
         const gameUpdates = data.playerPositions
         const totalUpdates = data.playerPositions.length
 
@@ -29,20 +41,20 @@ d3.json("../ticks/"+round_id)
 
         const progressBar = document.getElementById("progressBar");
         let isClicked = false;
-        
 
-        const playerEnters =  svg.selectAll(".player")
+
+        const playerEnters = svg.selectAll(".player")
             .data(players, d => d.steamid)
             .enter().append("g")
             .attr("transform", d => {
-                return "translate(" + xScale(d.X)+","+ yScale(d.Y) + ")" ;
+                return "translate(" + xScale(d.X) + "," + yScale(d.Y) + ")";
             });
 
         //https://d3-graph-gallery.com/graph/shape.html
         const playerCircles = playerEnters.append("circle")
             .attr("class", "player")
-            .attr("r", 5)
-            .attr("fill", d => d.health <1 ? "red" :d.team_name=="CT" ? "blue" : "yellow");
+            .attr("r", 7)
+            .attr("fill", d => d.health < 1 ? "red" : d.team_name == "CT" ? "blue" : "yellow");
 
         const playerNames = playerEnters.append("text")
             .attr("dx", -20)
@@ -65,23 +77,22 @@ d3.json("../ticks/"+round_id)
 
         const playerAim = playerEnters.append("path")
             .attr("d", d3.arc()
-              .innerRadius(0)
-              .outerRadius(5)
-              .startAngle(-0.5)
-              .endAngle(0.5)
-              )
+                .innerRadius(0)
+                .outerRadius(7)
+                .startAngle(-0.5)
+                .endAngle(0.5)
+            )
             .attr('stroke', 'black')
             .attr('fill', 'white');
-            
 
-        function updatePlayerPositions(newData){
+
+        function updatePlayerPositions(newData) {
             playerEnters.data(newData, d => d.steamid)
-            .attr("transform", function(d) {
-                return "translate(" + xScale(d.X)+","+ yScale(d.Y) + ")";
-            });
+                .attr("transform", function (d) {
+                    return "translate(" + xScale(d.X) + "," + yScale(d.Y) + ")";
+                });
 
         }
-
 
         function animatePlayerPositions(newData) {
 
@@ -89,56 +100,105 @@ d3.json("../ticks/"+round_id)
             playerEnters.data(newData, d => d.steamid).transition()
                 .duration(250)
                 .ease(d3.easeLinear)
-                .attr("transform", function(d) {
-                    return "translate(" + xScale(d.X)+","+ yScale(d.Y) + ")";
+                .attr("transform", function (d) {
+                    return "translate(" + xScale(d.X) + "," + yScale(d.Y) + ")";
                 });
-            
+
             playerCircles.data(newData, d => d.steamid)
-                .attr("fill", d => d.health <1 ? "gray" :d.team_name=="CT" ? "blue" : "yellow");
-            
+                .attr("fill", d => d.health < 1 ? "gray" : d.team_name == "CT" ? "blue" : "yellow");
+
             healthBarFill.data(newData, d => d.steamid)
-                .attr('width', d => ((d.health/100)*30))
+                .attr('width', d => ((d.health / 100) * 30))
 
             playerAim.data(newData, d => d.steamid).transition()
-            .duration(250)
-            .ease(d3.easeLinear)
-                .attr('transform', d => "rotate("+-d.yaw+")");
+                .duration(250)
+                .ease(d3.easeLinear)
+                .attr('transform', d => "rotate(" + -d.yaw + ")");
+
+        }
+
+        function animateGrenades(newData) {
+
+            grenadeSvgs = svg.selectAll(".grenade")
+                .data(newData, g => g.entity_id);
+
+            grenadeSvgs.exit().remove();
+
+            grenadeSvgs.enter()
+                .append("circle")
+                .attr("class", "grenade")
+                .attr("r", 5)
+                .attr("fill", g => grenadeColours.get(g.grenade_type))
+                .attr("transform", g => {
+                    return "translate(" + xScale(g.X) + "," + yScale(g.Y) + ")";
+                });
+
+            grenadeSvgs.transition()
+                .duration(250)
+                .ease(d3.easeLinear)
+                .attr("transform", function (g) {
+                    return "translate(" + xScale(g.X) + "," + yScale(g.Y) + ")";
+                });
+
+        }
+
+        function animateWeaponFires(newData){
+
+            newData.forEach(function (wf, index) {
+
+                weaponFlashCircles = playerEnters.filter(d => d.steamid === wf.player_steamid)
+                .append("circle")
+                .attr("r", 10) 
+                .attr("fill", "white")
+                .attr("opacity",1);
+
+                weaponFlashCircles.transition()
+                .duration(500) 
+                .ease(d3.easeLinear)
+                .attr("opacity", 0) 
+                .on("end", function() {
+                    d3.select(this).remove();
+                });
+                
+              });
 
         }
 
         let currentIndex = 0;
         function animateUpdates(index) {
-            
+
             if (index < gameUpdates.length) {
                 currentIndex = index
                 animatePlayerPositions(gameUpdates[currentIndex]);
-                    progressBar.value = Math.round((currentIndex/totalUpdates)*100)
+                animateGrenades(grenades[currentIndex])
+                animateWeaponFires(weaponFires[currentIndex])
+                progressBar.value = Math.round((currentIndex / totalUpdates) * 100)
                 currentIndex++;
                 nextAnimation = setTimeout(animateNextUpdate, 250);
             }
         }
 
-        function animateNextUpdate(){
-            if(!isClicked){
+        function animateNextUpdate() {
+            if (!isClicked) {
                 animateUpdates(currentIndex)
             }
         }
 
         animateUpdates(0);
 
-        progressBar.addEventListener("mousedown", function(){
+        progressBar.addEventListener("mousedown", function () {
             //dont update the slider whiule  were clicking it
             isClicked = true;
 
         });
-        progressBar.addEventListener("mouseup", function() {
+        progressBar.addEventListener("mouseup", function () {
             isClicked = false;
             progress = this.value;
             currentFrame = Math.round((progress / 100) * totalUpdates);
             clearTimeout(nextAnimation)
             updatePlayerPositions(currentFrame)
             setTimeout(animateUpdates(currentFrame), 250)
-            
+
         });
 
     });
