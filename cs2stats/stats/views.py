@@ -3,8 +3,10 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
+from django.core import serializers
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 import json
@@ -80,7 +82,6 @@ def dashboard(request):
     return render(request, 'stats/dashboard.html', context)
 
 
-
 def create_team(request):
     if request.method == 'POST':
         form = CreateTeamForm(request.POST)
@@ -96,17 +97,21 @@ def stratPage(request):
     return render(request, 'stats/stratPage.html', {'maps':maps})
 
 
-
 def round_view(request, round_id):
     maps = Map.objects.all()
-    user = request.user
-    player = get_object_or_404(Player, user=user)
-    team = Team.objects.filter(players=player).first()  
+    if request.user.is_authenticated:
+        print(request.user)
+        user = request.user
+        player = get_object_or_404(Player, user=user)
+        team = Team.objects.filter(players=player).first()  
+
+
+    
     round = get_object_or_404(Round, id=round_id)
 
-    if request.method == 'POST':
+    if (request.method == 'POST') & (request.user.is_authenticated):
         form = CommentForm(request.POST, team=team)
-        if form.is_valid():
+        if form.is_valid()  :
             comment = form.save(commit=False)
             comment.round = round
             comment.author = user
@@ -123,17 +128,19 @@ def round_view(request, round_id):
             
             return redirect('round_view', round_id=round.id)
     else:
-        form = CommentForm(team=team)
+        form = CommentForm()
 
     
     comment_to_highlight = Comment.objects.filter(round=round, id=request.GET.get('comment_id')).first()
+    kills = round.kills_set.all().order_by('tick')
 
     return render(request, 'stats/round_view.html', {
         'maps': maps,
         'round': round,
         'form': form,
+        'kills':kills,
         'comment_to_highlight': comment_to_highlight,
-        'team': team,
+
     })
 
 
@@ -141,6 +148,14 @@ def round_view(request, round_id):
 def round_ticks(request, round_id):
     round = Round.objects.get(id=round_id).ticks
     return JsonResponse(round, safe=False)
+
+def kills(request, round_id):
+
+    # https://stackoverflow.com/a/37839240
+    kills = Round.objects.get(id=round_id).kills_set.all()
+    killsJson = serializers.serialize('json', kills)
+
+    return HttpResponse(killsJson,content_type='application/json')
 
 
 def d3(request):

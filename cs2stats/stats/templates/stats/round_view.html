@@ -29,7 +29,6 @@
 
     .comment strong {
         color: #ffd900;
-        /* Highlight the author's name */
     }
 
     .form-section {
@@ -53,6 +52,22 @@
         </div>
         <input id="progressBar" type="range" value="0" min="0" max="100">
     </section>
+    <ul id="killFeed" class="list-group">
+        {% for kill in kills %}
+        <a href="#">
+        <li class="list-group-item">
+
+            {{kill.round_time}} : {{kill.attacker_ID}} 
+            {% if kill.assister_ID %}
+             + {{kill.assister_ID}} 
+            {% endif %}
+            killed {{kill.victim_ID}} with {{kill.weapon}}
+
+        </li>
+    </a>
+
+        {% endfor %}
+      </ul>
 </div>
 
 
@@ -91,6 +106,7 @@
 <script type="text/javascript">
     console.log('Round ID ' + '{{ round.id }}');
     var round_id = '{{ round.id }}';
+    var kills = '{{ kills }}'
 </script>
 
 <script src="{% static 'minimap.js' %}"></script>

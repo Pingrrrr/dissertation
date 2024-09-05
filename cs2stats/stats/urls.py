@@ -23,6 +23,8 @@ urlpatterns = [
     path('create-team/', views.create_team, name='create_team'),
     path('round/<int:round_id>/', views.round_view, name='round_view'),
     path('round/ticks/<int:round_id>/', views.round_ticks, name='round_ticks'),
+    
+    path('round/kills/<int:round_id>/', views.kills, name='kills')
    
 
     

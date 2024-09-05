@@ -17,6 +17,8 @@ const mapWidth = 1024 * 5.2
 const xScale = d3.scaleLinear().domain([-4831, (-4831 + mapWidth)]).range([0, width]);
 const yScale = d3.scaleLinear().domain([1781, (1781 - mapWidth)]).range([0, height]);
 
+const kills = d3.json("../kills/" + round_id);
+
 
 //['smoke', 'flashbang', 'molotov', 'he_grenade', 'incendiary_grenade']
 let grenadeColours = new Map();
@@ -164,11 +166,13 @@ d3.json("../ticks/" + round_id)
 
         }
 
+
         let currentIndex = 0;
         function animateUpdates(index) {
 
             if (index < gameUpdates.length) {
                 currentIndex = index
+                currentTick = gameUpdates[currentIndex][0].tick;
                 animatePlayerPositions(gameUpdates[currentIndex]);
                 animateGrenades(grenades[currentIndex])
                 animateWeaponFires(weaponFires[currentIndex])
