@@ -134,6 +134,7 @@ def round_view(request, round_id):
     comment_to_highlight = Comment.objects.filter(round=round, id=request.GET.get('comment_id')).first()
     kills = round.kills_set.all().order_by('tick')
 
+
     return render(request, 'stats/round_view.html', {
         'maps': maps,
         'round': round,

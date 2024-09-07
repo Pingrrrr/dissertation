@@ -1,11 +1,19 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+
+
+{% endblock %}
+
 {% block title %}Strategy Maker{% endblock %}
 
 {% block content %}
 
 {% load static %}
-<script src="{% static 'maps.js' %}"></script>
+<script src="{% static 'fabric.js' %}"></script>
+
+
+
 
 <!-- custom css here until I work out how to get the map to work with the other css-->
 <style>
@@ -64,7 +72,7 @@ main {
         </select>
     </div>
     <div class="map-container">
-        <canvas id="map-canvas" width="800" height="600"></canvas>
+        <canvas id="map-canvas" width="800" height="800"></canvas>
     </div>
     <div class="tools">
         <div id="draw" class="tool-icon" title="Draw">
@@ -73,6 +81,40 @@ main {
         <div id="erase" class="tool-icon" title="Erase">
             <i class="fas fa-eraser"></i>
         </div>
+        <div id="select" class="tool-icon" title="Select">
+            <i class="fas fa-arrows"></i>
+        </div>
+        <div id="undo" class="tool-icon" title="Undo">
+            <i class="fas fa-undo"></i>
+        </div>
     </div>
+    <div>
+        <ul id="successMetrics" class="list-group">
+            <li class="list-group-item disabled">Success Metrics</li>
+
+        </ul>
+        <div class="dropdown">
+            <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Add success metric
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Win Round</a></li>
+                <li><a class="dropdown-item" href="#">Plant Bomb (Terrorist)</a></li>
+                <li><a class="dropdown-item" href="#">Prevent Bomb Plant (CT)</a></li>
+                <li><a class="dropdown-item" href="#">Keep Team Members Alive</a></li>
+                <li><a class="dropdown-item" href="#">Kill Enemy Players</a></li>
+              </ul>
+    </div>
+
+    <div>
+        
+    </div>
+    <div>
+        <button id="saveButton" class="btn btn-primary">Save Strategy</button>
+    </div>
+
+
+    <script src="{% static 'strategyPlanner.js' %}"></script>
+
 
 {% endblock %}

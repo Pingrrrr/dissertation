@@ -33,6 +33,9 @@ console.log('Round ID ' + round_id);
 
 d3.json("../ticks/" + round_id)
     .then(function (data) {
+        console.log(data.playerPositions.length-1)
+        const firstTick = data.playerPositions[0][0].tick
+        const lastTick = data.playerPositions[data.playerPositions.length-1][0].tick
         const players = data.playerPositions[0]
         const grenades = data.grenades
         const weaponFires = data.weaponFires
@@ -42,7 +45,9 @@ d3.json("../ticks/" + round_id)
         const svg = d3.select("#minimap");
 
         const progressBar = document.getElementById("progressBar");
+        
         let isClicked = false;
+        let playing = false;
 
 
         const playerEnters = svg.selectAll(".player")
@@ -183,11 +188,12 @@ d3.json("../ticks/" + round_id)
         }
 
         function animateNextUpdate() {
-            if (!isClicked) {
+            if (!isClicked && playing) {
                 animateUpdates(currentIndex)
             }
         }
 
+        playing=true
         animateUpdates(0);
 
         progressBar.addEventListener("mousedown", function () {
@@ -204,5 +210,45 @@ d3.json("../ticks/" + round_id)
             setTimeout(animateUpdates(currentFrame), 250)
 
         });
+
+        const playButton = document.getElementById('playButton');
+
+        function pauseReplay(){
+            playing=false;
+            clearTimeout(nextAnimation)
+        }
+
+        function playReplay(){
+            playing=true;
+            animateNextUpdate();
+        }
+
+        // Toggle Play/Pause
+        playButton.addEventListener('click', function() {
+            if (!playing) {
+                playReplay();
+                playButton.textContent = 'Pause';
+            } else {
+                pauseReplay()
+                playButton.textContent = 'Play ';
+            }
+        });
+
+        const timestampComments = document.getElementsByClassName("timestampComment")
+        console.log(timestampComments)
+
+        for(comment of timestampComments){
+            comment.addEventListener("click", function () {
+                console.log("clicked! Value is "+this.id)
+                tick = this.id;
+                currentFrame = Math.round(((tick-firstTick)/(lastTick-firstTick)) * totalUpdates);
+                console.log("moving to frame: "+currentFrame)
+                clearTimeout(nextAnimation)
+                updatePlayerPositions(currentFrame)
+                setTimeout(animateUpdates(currentFrame), 250)
+    
+            });
+
+        }
 
     });
