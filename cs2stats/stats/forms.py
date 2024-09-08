@@ -44,3 +44,6 @@ class CommentForm(forms.ModelForm):
             self.fields['tagged_players'].queryset = Player.objects.filter(player_team=team)
 
 
+
+
+

@@ -27,6 +27,8 @@
         <div class="card-header">
             Saved Strategies
         </div>
+        <a href="{% url 'create_strategy' %}" class="btn btn-sm btn-primary ml-2">Create New Strategy
+        </a>
         <div class="card-body">
             <ul class="list-group">
                 {% for strategy in strategies %}

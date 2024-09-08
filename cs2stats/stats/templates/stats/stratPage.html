@@ -17,104 +17,119 @@
 
 <!-- custom css here until I work out how to get the map to work with the other css-->
 <style>
-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-}
+    #map-canvas {
+        border: 1px solid #444;
+        background-color: #1e1e1e;
+    }
 
-.map-container {
-    position: relative;
-}
+    .tools {
+        margin-top: 10px;
+    }
 
-#map-canvas {
-    border: 1px solid #444; 
-    background-color: #1e1e1e; 
-}
+    .tool-icon {
+        display: inline-block;
+        padding: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        margin: 0 5px;
+        transition: background-color 0.3s, color 0.3s;
+        text-align: center;
+        color: #e0e0e0;
+        background-color: transparent;
+    }
 
-.tools {
-    margin-top: 10px;
-}
+    .tool-icon.active {
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+    }
 
-.tool-icon {
-    display: inline-block;
-    padding: 10px;
-    font-size: 24px;
-    cursor: pointer;
-    margin: 0 5px;
-    transition: background-color 0.3s, color 0.3s;
-    text-align: center;
-    color: #e0e0e0; 
-    background-color: transparent; 
-}
-
-.tool-icon.active {
-    background-color: #007bff; 
-    color: white; 
-    border-radius: 50%;
-}
-
-.tool-icon:hover {
-    background-color: #0056b3; 
-    color: white; 
-}
+    .tool-icon:hover {
+        background-color: #0056b3;
+        color: white;
+    }
 </style>
 
-    <div class="map-container my-4">
+<div class="container">
+    <div class="row my-4">
         <h1>CS2 Strategy Maker</h1>
         <label for="map-selector">Choose a Map:</label>
         <select id="map-selector">
             {% for map in maps %}
-                <option value="{{map.name}}">{{map.name}}</option>
+            <option value="{{map.name}}">{{map.name}}</option>
             {% endfor %}
-    
+
         </select>
     </div>
-    <div class="map-container">
-        <canvas id="map-canvas" width="800" height="800"></canvas>
-    </div>
-    <div class="tools">
-        <div id="draw" class="tool-icon" title="Draw">
-            <i class="fas fa-pencil-alt"></i>
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="map-container">
+                <canvas id="map-canvas" width="800" height="800"></canvas>
+            </div>
+            <div class="tools">
+                <div id="draw" class="tool-icon" title="Draw">
+                    <i class="fas fa-pencil-alt"></i>
+                </div>
+                <div id="erase" class="tool-icon" title="Erase">
+                    <i class="fas fa-eraser"></i>
+                </div>
+                <div id="select" class="tool-icon" title="Select">
+                    <i class="fas fa-arrows"></i>
+                </div>
+                <div id="undo" class="tool-icon" title="Undo">
+                    <i class="fas fa-undo"></i>
+                </div>
+            </div>
         </div>
-        <div id="erase" class="tool-icon" title="Erase">
-            <i class="fas fa-eraser"></i>
+        <div class="col-sm-4">
+            <div>
+                <h2>{{strat.name}}</h2>
+                <div class="dropdown">
+                    <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Add success metric
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Win Round</a></li>
+                        <li><a class="dropdown-item" href="#">Plant Bomb (Terrorist)</a></li>
+                        <li><a class="dropdown-item" href="#">Prevent Bomb Plant (CT)</a></li>
+                        <li><a class="dropdown-item" href="#">Keep Team Members Alive</a></li>
+                        <li><a class="dropdown-item" href="#">Kill Enemy Players</a></li>
+                    </ul>
+                </div>
+
+                <div>
+
+                </div>
+                <div>
+                    <!-- have to include csrf_token to stop the javascript method getting blocked from posting: https://docs.djangoproject.com/en/5.1/howto/csrf/-->
+                    <form id="saveStratForm">
+
+                        <div class="input-group">
+                            <input type="text" name="stratName" id="stratName" placeholder="Strategy Name"
+                                class="form-control" value="{{strat.name}}">
+                        </div>
+                        <div class="input-group">
+                            <textarea name="description" class="form-control" aria-label="With textarea"
+                                placeholder="Description">{{strat.description}}</textarea>
+                        </div>
+
+
+                        <button type="submit" id="saveButton" class="btn btn-primary">Save Strategy</button>
+
+                    </form>
+
+                </div>
+            </div>
         </div>
-        <div id="select" class="tool-icon" title="Select">
-            <i class="fas fa-arrows"></i>
-        </div>
-        <div id="undo" class="tool-icon" title="Undo">
-            <i class="fas fa-undo"></i>
-        </div>
     </div>
-    <div>
-        <ul id="successMetrics" class="list-group">
-            <li class="list-group-item disabled">Success Metrics</li>
+</div>
 
-        </ul>
-        <div class="dropdown">
-            <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Add success metric
-              </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Win Round</a></li>
-                <li><a class="dropdown-item" href="#">Plant Bomb (Terrorist)</a></li>
-                <li><a class="dropdown-item" href="#">Prevent Bomb Plant (CT)</a></li>
-                <li><a class="dropdown-item" href="#">Keep Team Members Alive</a></li>
-                <li><a class="dropdown-item" href="#">Kill Enemy Players</a></li>
-              </ul>
-    </div>
+<script>
+    var csrftoken = '{{ csrf_token }}';
 
-    <div>
-        
-    </div>
-    <div>
-        <button id="saveButton" class="btn btn-primary">Save Strategy</button>
-    </div>
-
-
-    <script src="{% static 'strategyPlanner.js' %}"></script>
+</script>
+<script src="{% static 'strategyPlanner.js' %}"></script>
 
 
 {% endblock %}

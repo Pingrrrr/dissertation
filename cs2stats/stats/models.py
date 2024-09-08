@@ -165,8 +165,9 @@ class Stat(models.Model):
     
 class Strategy(models.Model):
     name = models.CharField(max_length=100, default='Tactic A')
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=10000)
     creator = models.ForeignKey(Player, on_delete=models.CASCADE)
+    stratCanvas = models.JSONField(null=True)
     maps = models.ManyToManyField('Map', related_name='map_name')
     rounds = models.ManyToManyField('Round', related_name='round_id')
     type = models.ManyToManyField('StrategyType', related_name='type_id')

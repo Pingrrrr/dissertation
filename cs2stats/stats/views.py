@@ -11,8 +11,9 @@ from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 import json
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
-from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment
+from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy
 from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
 from .decorators import unauthenicated_user, allowed_users
 
@@ -92,9 +93,84 @@ def create_team(request):
         form = CreateTeamForm()
     return render(request, 'stats/create_team.html', {'form': form})
 
+@csrf_exempt
 def stratPage(request):
+    if (request.method == 'POST') & (request.user.is_authenticated):
+        #https://forum.djangoproject.com/t/how-to-read-non-django-html-form-data/8864/2
+        data = request.POST
+        print(data)
+        if(data.get('id')):
+            print(f"id is {data.get('id')}")
+            strat = Strategy.objects.get(id=data.get('id'))
+        else:
+            map = Map.objects.get(name=data.get('map'))
+            creator = Player.objects.get(user=request.user)
+            strat = Strategy(
+                name = data.get('stratName'),
+                creator = creator,
+                stratCanvas = data.get('stratCanvas')
+            )
+        strat.save()
+        strat.maps.add(map)
+
+        return redirect('strategy', strategy_id=strat.id)
+    else: 
+        maps = Map.objects.all()
+        return render(request, 'stats/stratPage.html', {'maps':maps})
+
+def strategy(request, strategy_id):
     maps = Map.objects.all()
-    return render(request, 'stats/stratPage.html', {'maps':maps})
+    strat = Strategy.objects.get(id=strategy_id)
+
+    if (request.method == 'POST') & (request.user.is_authenticated):
+        #https://forum.djangoproject.com/t/how-to-read-non-django-html-form-data/8864/2
+        data = request.POST
+        map = Map.objects.get(name=data.get('map'))
+        strat.name = data.get('stratName')
+        strat.description = data.get('description')
+        strat.stratCanvas = json.loads(data.get('stratCanvas'))
+        strat.save()
+        strat.maps.add(map)
+        return redirect('strategy', strategy_id=strat.id)
+    else: 
+        return render(request, 'stats/stratPage.html', {'maps':maps, 'strat':strat})
+    
+def strategy_canvas(request, strategy_id):
+    strat = Strategy.objects.get(id=strategy_id)
+    return JsonResponse(strat.stratCanvas, safe=True)
+    
+
+def strategies(request):
+    player = Player.objects.get(user=request.user)
+    strategies = Strategy.objects.filter(creator=player)
+
+    return render(request, 'stats/strategies.html', {'strategies':strategies} )
+
+
+def create_strategy(request):
+    creator = Player.objects.get(user=request.user)
+    strat = Strategy(name="Untitled Strategy",
+                     creator=creator)
+    strat.save()
+    return redirect('strategy', strategy_id=strat.id)
+
+def add_strategy(request):
+    if (request.method == 'POST') & (request.user.is_authenticated):
+        #have to use request.data instead of request.body: https://stackoverflow.com/a/55099866
+        print(request.body)
+        if(request.body.id):
+            strat = Strategy.objects.get(id=request.body.id)
+        else:
+            map = Map.objects.get(name=request.body.map)
+            strat = Strategy(
+                name = request.body.stratName,
+                creator = request.user,
+                maps = map,
+                stratCanvas = request.body.stratCanvas
+            )
+        strat.save()
+        return redirect('strategy', strategy_id=strat.id)
+
 
 
 def round_view(request, round_id):

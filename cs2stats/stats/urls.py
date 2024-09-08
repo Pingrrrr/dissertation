@@ -17,14 +17,20 @@ urlpatterns = [
     path('match/<int:match_id>/', views.match_detail, name='match_detail'), 
     path('team_comms/<int:team_id>/', views.team_comms, name='team_comms'),
     path('teams/', views.teams, name='teams'),
-    path('stratPage/', views.stratPage, name='stratPage'),
+    
     path('d3/', views.d3, name='d3'),
     path('d3/round/', views.d3_round, name='d3_round'),
     path('create-team/', views.create_team, name='create_team'),
     path('round/<int:round_id>/', views.round_view, name='round_view'),
     path('round/ticks/<int:round_id>/', views.round_ticks, name='round_ticks'),
-    
-    path('round/kills/<int:round_id>/', views.kills, name='kills')
+    path('round/kills/<int:round_id>/', views.kills, name='kills'),
+
+    path('stratPage/', views.stratPage, name='stratPage'),  
+    path('strategies/', views.strategies, name='strategies'),
+    path('create_strategy/', views.create_strategy, name='create_strategy'),
+    path('strategy/addStrategy/', views.add_strategy, name='add_strategy'),
+    path('strategy/<int:strategy_id>/', views.strategy, name='strategy'),
+    path('strategy/<int:strategy_id>/canvas', views.strategy_canvas,  name='strategy_canvas')
    
 
     
