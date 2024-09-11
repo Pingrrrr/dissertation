@@ -1,5 +1,6 @@
 #https://stackoverflow.com/a/24456404
 import datetime
+import hashlib
 import json
 import MySQLdb
 import os, django
@@ -7,7 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
 from django.utils import timezone
 from awpy import Demo
-from stats.models import Grenade, Player, Match, PlayerTick, Stat, Team, Series, Round, Kills, BombEvent, WeaponFires
+from stats.models import *
 #https://docs.djangoproject.com/en/5.0/ref/exceptions/
 from django.core.exceptions import ObjectDoesNotExist
 from awpy.stats import adr
@@ -41,6 +42,8 @@ def determineTrades(match, tradeTime, tickRate):
 
 players={}
 def getPlayer(steamId):
+    if not steamId or steamId==None or steamId=='None':
+        return None
     if steamId in players.keys():
         return players[steamId]
     else:
@@ -48,8 +51,9 @@ def getPlayer(steamId):
             player = Player.objects.get(steam_id=steamId)
             players[steamId] = player
         except Player.DoesNotExist:
-            print(f"Player with steam_id {steamId} not found")
-            return None
+            player = Player.objects.create(steam_id=steamId)
+            players[steamId] =player
+        return player
 
 
 
@@ -188,27 +192,49 @@ def processWeaponFires(dem, match):
 
 
 
-def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
+def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
 
-    if not series:
-        series = Series(winningTeam="Undecided")
-        series.save()
+    #team lineouts
+    print("setting up team lineouts")
+    ctTeam = Lineup.objects.create()
+    tTeam = Lineup.objects.create()
+
+    initialTick = dem.ticks[dem.ticks['tick']==(dem.ticks.iloc[0]['tick'])]
+    ctTeam.clanName = initialTick[initialTick['team_name']=="CT"].iloc[0]['team_clan_name']
+    tTeam.clanName = initialTick[initialTick['team_name']=="TERRORIST"].iloc[0]['team_clan_name']
+    for index, tick in initialTick.iterrows():
+        player = getPlayer(tick['steamid'])
+        if not player.nick_name:
+            player.nick_name=tick['name']
+        if tick['team_name']=="CT":
+            ctTeam.players.add(player)
+        else:
+            tTeam.players.add(player)
+
+    ctTeam.save()
+    tTeam.save()
+
 
     #match
+    print("setting up match")
     match = Match()
-    match.date=timezone.now()
-
-    match.team_a=ctTeam
-    match.team_b=tTeam
+    match.team_a_lineup=ctTeam
+    match.team_b_lineup=tTeam
     match.map = dem.header['map_name'] 
-    match.series = series
     match.tick_rate=tickRate
+    match.date = django.utils.timezone.now()
+
+    if series:
+        match.series = series
     match.save()
+
+    uploadedDemo.match = match
+    uploadedDemo.save()
 
 
     #round
+    print("processing rounds")
     for index, round in dem.rounds.iterrows():
-
 
         #for some reason the winner is returned as a number (3=CT, 2=T)
         if (round['winner'] == "CT") or (round['winner'] == 3):
@@ -232,6 +258,7 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
             tTeam = tmpCtTeam
 
     #kills
+    print("processing kills")
     for index, kill in dem.kills.iterrows():
         # if it doesn't exist, print a message and skip to the next kill.
         try:
@@ -241,23 +268,10 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
             continue
         
         #Not all kills will have assisters or even attackers as players can be killed by bomb or falling
-        try:
-            attacker = Player.objects.get(steam_id=kill['attacker_steamid'])
-        except Player.DoesNotExist:
-            print(f"Attacker with steam_id {kill['attacker_steamid']} does not exist")
-            attacker = None
-        try:
-            assister = Player.objects.get(steam_id=kill['assister_steamid'])
-        except Player.DoesNotExist:
-            print(f"Assister with steam_id {kill['assister_steamid']} does not exist")
-            assister = None
-        try:
-            victim = Player.objects.get(steam_id=kill['victim_steamid'])
-        except Player.DoesNotExist:
-            print(f"Victim with steam_id {kill['victim_steamid']} does not exist")
-            victim = None
+        attacker = getPlayer(kill['attacker_steamid'])
+        assister = getPlayer(kill['assister_steamid'])
+        victim = getPlayer(kill['victim_steamid'])
 
-        
         if round:
             k = Kills(
                 round_ID=round, 
@@ -283,6 +297,7 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
         else:
             print(f"Skipping kill due to missing round, attacker, or victim data: {kill}")
 
+    print("working out trades")
     determineTrades(match=match, tradeTime=5, tickRate=tickRate)
 
     #bomb events
@@ -326,24 +341,73 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
     adr_stats = adr(dem)
     kast_stats = kast(dem, trade_ticks=tickRate)
     rating_stats = rating(dem)
-
-
-    player_steam_ids = set(dem.kills['attacker_steamid']).union(set(dem.kills['victim_steamid']))
-    for steam_id in player_steam_ids:
+    
+    for steam_id in players.keys():
         
         try:
-            player_instance = Player.objects.get(steam_id=steam_id)
+            player_instance = getPlayer(steamId=steam_id)
         except Player.DoesNotExist:
             print(f"Player with steam_id {steam_id} does not exist")
             continue
+        print(f"processing stats for {player_instance.nick_name} with steam id: {steam_id}")
 
         
-        total_kills = len(dem.kills[dem.kills['attacker_steamid'] == steam_id])
-        total_deaths = len(dem.kills[dem.kills['victim_steamid'] == steam_id])
-        total_damage = dem.damages[dem.damages['attacker_steamid'] == steam_id]['dmg_health_real'].sum()
+        total_kills = 0
+        total_deaths = 0
+        total_damage = 0
         rounds_played = len(dem.rounds)
 
         if rounds_played > 0:
+            sides = ['TERRORIST','CT']
+            for side in sides:
+                
+                side_kills = len(dem.kills[(dem.kills['attacker_steamid'] == steam_id) & (dem.kills['attacker_team_name'] == side)])
+                total_kills += side_kills
+
+                side_deaths = len(dem.kills[(dem.kills['victim_steamid'] == steam_id) & (dem.kills['victim_team_name'] == side)])
+                total_deaths += side_deaths
+
+                side_damage = dem.damages[(dem.damages['attacker_steamid'] == steam_id) & (dem.damages['attacker_team_name'] == side)]['dmg_health_real'].sum()
+                total_damage += side_damage
+
+                side_rounds = adr_stats[(adr_stats['steamid']==steam_id) & (adr_stats['team_name']==side)]['n_rounds'].iloc[0]
+
+                kills_per_round = side_kills / side_rounds
+                deaths_per_round = side_deaths / side_rounds
+                kd_ratio = side_kills / (side_deaths if side_deaths > 0 else 1)
+                damage_per_round = side_damage / side_rounds
+                headshot_percentage = (dem.kills[(dem.kills['attacker_steamid'] == steam_id) & (dem.kills['attacker_team_name'] == side)]['headshot'].mean()) * 100
+
+                adr_df=adr_stats[(adr_stats['steamid']==steam_id) & (adr_stats['team_name']==side)]
+                kast_df=kast_stats[(kast_stats['steamid']==steam_id) & (kast_stats['team_name']==side)]
+                rating_df=rating_stats[(rating_stats['steamid']==steam_id) & (rating_stats['team_name']==side)]
+
+                adr_value = adr_df['adr'].iloc[0]
+                kast_value = kast_df['kast'].iloc[0]
+                rating_value = rating_df['rating'].iloc[0]
+                impact_value = rating_df['impact'].iloc[0]
+                
+                stat, created = Stat.objects.update_or_create(
+                    player=player_instance,
+                    match=match,
+                    side=side,
+                    defaults={
+                        'rating': rating_value,
+                        'kills_per_round': kills_per_round,
+                        'deaths_per_round': deaths_per_round,
+                        'kd_ratio': kd_ratio,
+                        'headshot_percentage': headshot_percentage,
+                        'total_kills': side_kills,
+                        'total_deaths': side_deaths,
+                        'damage_per_round': damage_per_round,
+                        'rounds_played': side_rounds,
+                        'adr': adr_value,
+                        'kast': kast_value,
+                        'impact': impact_value
+                    }
+                )
+
+            #now for overall stats
             kills_per_round = total_kills / rounds_played
             deaths_per_round = total_deaths / rounds_played
             kd_ratio = total_kills / (total_deaths if total_deaths > 0 else 1)
@@ -354,15 +418,15 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
             kast_df=kast_stats[(kast_stats['steamid']==steam_id) & (kast_stats['team_name']=='all')]
             rating_df=rating_stats[(rating_stats['steamid']==steam_id) & (rating_stats['team_name']=='all')]
 
-            
-            adr_value = adr_df['adr']
-            kast_value = kast_df['kast']
-            rating_value = rating_df['rating']
-            impact_value = rating_df['impact']
+            adr_value = adr_df['adr'].iloc[0]
+            kast_value = kast_df['kast'].iloc[0]
+            rating_value = rating_df['rating'].iloc[0]
+            impact_value = rating_df['impact'].iloc[0]
             
             stat, created = Stat.objects.update_or_create(
                 player=player_instance,
                 match=match,
+                side='ALL',
                 defaults={
                     'rating': rating_value,
                     'kills_per_round': kills_per_round,
@@ -373,9 +437,6 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
                     'total_deaths': total_deaths,
                     'damage_per_round': damage_per_round,
                     'rounds_played': rounds_played,
-                    'maps_played': 1,  
-                    'win_percentage': 0,
-                    'entry_kills': 0,
                     'adr': adr_value,
                     'kast': kast_value,
                     'impact': impact_value
@@ -384,10 +445,45 @@ def parseMatchFromDemo(dem, ctTeam, tTeam, series, tickRate):
 
             print(f"Updated stats for player {player_instance.nick_name}")
 
+def getHash(file):
+
+    #https://stackoverflow.com/a/55542529
+
+    hash = hashlib.sha256()
+
+    with open(file, 'rb') as f:
+        while True:
+            chunk = f.read(hash.block_size)
+            if not chunk:
+                break
+            hash.update(chunk)
+    return hash.hexdigest()
 
 
+filename = r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem"
+hash = getHash(filename)
 
-dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem", ticks=True)
+#make an upload file
+uploadDemoFile = UploadedDemoFile.objects.create(file=filename)
+
+#check if the file has already been uploaded
+try:
+    uploadedDemo = UploadedDemo.objects.get(hash=hash)
+except UploadedDemo.DoesNotExist:
+    uploadedDemo = UploadedDemo(
+        hash=hash,
+    )
+    uploadedDemo.save()
+
+uploadDemoFile.demo=uploadedDemo
+uploadDemoFile.save()
+
+
+#else:
+    #are you sure you want to reprocess this demo file?
+
+
+dem = Demo(filename, ticks=True)
 #dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m2-anubis.dem", ticks=True)
 
 
@@ -399,12 +495,14 @@ dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.de
 #ct_team = dem.events['begin_new_match'][['ct_team_clan_name']]
 #t_team = dem.events['begin_new_match'][['t_team_clan_name']]
 
-team_a = Team.objects.get(id=1) #navi
-team_b = Team.objects.get(id=2) #vp
+#team_a = Team.objects.get(id=1) #navi
+#team_b = Team.objects.get(id=2) #vp
 
-series = Series(team_a=team_a, team_b=team_b, best_of=3)
-series.save()
+#series = Series(team_a=team_a, team_b=team_b, best_of=3)
+#series.save()
+
+
 
 tickRate = determineTickRate(demo=dem)
-parseMatchFromDemo(dem=dem, ctTeam=team_a, tTeam=team_b, series=series, tickRate=tickRate)
+parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate)
         

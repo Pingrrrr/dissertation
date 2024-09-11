@@ -9,7 +9,7 @@
     <!-- Match Overview -->
     <div class="row">
         <div class="col text-center">
-            <h2>{{ match.team_a.name }} vs {{ match.team_b.name }}</h2>
+            <h2>{{ match.team_a_lineup.clanName }} vs {{ match.team_b_lineup.clanName }}</h2>
             <h4>{{ match.map }}</h4>
         </div>
     </div>
@@ -17,7 +17,7 @@
     <!-- Team A Player Stats -->
     <div class="row mt-4">
         <div class="col-12">
-            <h5 class="text-center">{{ match.team_a.name }} Player Stats</h5>
+            <h5 class="text-center">{{ match.team_a_lineup.clanName }} Player Stats</h5>
             <div class="card-group">
                 {% for stat in team_a_stats %}
                 <div class="card">
@@ -40,7 +40,7 @@
     <!-- Team B Player Stats -->
     <div class="row mt-4">
         <div class="col-12">
-            <h5 class="text-center">{{ match.team_b.name }} Player Stats</h5>
+            <h5 class="text-center">{{ match.team_a_lineup.clanName }} Player Stats</h5>
             <div class="card-group">
                 {% for stat in team_b_stats %}
                 <div class="card">
@@ -77,7 +77,7 @@
                     {% for round in rounds %}
                     <tr>
                         <td>Round {{ round.round_num }}</td>
-                        <td>{{ round.winningTeam.name }}</td>
+                        <td>{{ round.winningTeam.clanName }}</td>
                         <td>{{ round_end_reasons|dict_key:round.roundEndReason }}</td>
                         <td>
                             <a href="{% url 'round_view' round.round_num %}" 

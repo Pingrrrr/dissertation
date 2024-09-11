@@ -1,7 +1,7 @@
 from django import forms 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Team, UploadedDemo,Series, Comment, Player, Strategy
+from .models import Team, UploadedDemoFile,Series, Comment, Player, Strategy
 from django.db.models import Q
 
 
@@ -21,14 +21,10 @@ class CreateTeamForm(forms.ModelForm):
 class DemoUploadForm(forms.ModelForm):
 
     class Meta:
-        model = UploadedDemo
-        fields = ['file', 'description', 'series']  
-    # Customizes the form initialization to filter the series field based on the team
-    def __init__(self, *args, **kwargs):
-        team = kwargs.pop('team', None)
-        super().__init__(*args, **kwargs)
-        if team:
-            self.fields['series'].queryset = Series.objects.filter(Q(team_a=team) | Q(team_b=team))
+        model = UploadedDemoFile
+        fields = ['file', 'description']  
+
+
 
 
 class CommentForm(forms.ModelForm):

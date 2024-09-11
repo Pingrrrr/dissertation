@@ -31,11 +31,19 @@ class Series(models.Model):
 
     def __str__(self):
         return f"Series {self.id}: {self.team_a} vs {self.team_b} (Winner: {self.winning_team})"
+    
+class Lineup(models.Model):
+    clanName = models.CharField(max_length=100, default='Unknown')
+    team = models.ForeignKey(Team, null=True, on_delete=models.SET_NULL)
+    players = models.ManyToManyField(Player, related_name='player_lineup')
+
 
 class Match(models.Model):
     date = models.DateTimeField()
     team_a = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_a_matches', null=True, blank=True)
     team_b = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_b_matches', null=True, blank=True)
+    team_a_lineup = models.ForeignKey(Lineup, on_delete=models.SET_NULL, related_name='team_a_lineup', null=True)
+    team_b_lineup = models.ForeignKey(Lineup, on_delete=models.SET_NULL, related_name='team_b_lineup', null=True)
     map = models.CharField(max_length=100, default='Unknown')
     series = models.ForeignKey(Series, on_delete=models.SET_NULL, null=True, blank=True, related_name='matches')
     tick_rate = models.IntegerField(default=64)
@@ -43,12 +51,13 @@ class Match(models.Model):
     def __str__(self):
         return f"{self.map} : {self.team_a} vs {self.team_b}"
     
+    
 class Round(models.Model):
     match_id = models.ForeignKey(Match, on_delete=models.SET_NULL, null=True, blank=True)
     round_num = models.IntegerField(default=1)
     isWarmup = models.BooleanField(default=False)
     winningSide = models.CharField(max_length=100, default='Unknown')
-    winningTeam = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
+    winningTeam = models.ForeignKey(Lineup, on_delete=models.SET_NULL, null=True)
     roundEndReason = models.CharField(max_length=100,  default='Unknown') #bomb detonation, T victory, CT victory, defuse
     bombPlant = models.BooleanField(default=False)
     t_startEquipmentValue = models.IntegerField(default=0)
@@ -144,6 +153,7 @@ class Kills(models.Model):
 class Stat(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    side = models.CharField(max_length=24, null=True)
     rating = models.FloatField(default=0.0)
     kills_per_round = models.FloatField(default=0.0)
     deaths_per_round = models.FloatField(default=0.0)
@@ -153,9 +163,6 @@ class Stat(models.Model):
     total_deaths = models.IntegerField(default=0)
     damage_per_round = models.FloatField(default=0.0)
     rounds_played = models.IntegerField(default=0)
-    maps_played = models.IntegerField(default=0)
-    win_percentage = models.FloatField(default=0.0)
-    entry_kills = models.IntegerField(default=0)
     adr = models.FloatField(default=0.0)
     kast = models.FloatField(default=0.0) 
     impact = models.FloatField(default=0.0)
@@ -172,7 +179,6 @@ class Strategy(models.Model):
     rounds = models.ManyToManyField('Round', related_name='round_id')
     type = models.ManyToManyField('StrategyType', related_name='type_id')
     
-
     def __str__(self):
         return f"{self.tactic_name} "
 
@@ -232,15 +238,21 @@ class Notification(models.Model):
     comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
 
 class UploadedDemo(models.Model):
-    team = models.ForeignKey(Team, related_name='demos', on_delete=models.CASCADE)
-    uploaded_by = models.ForeignKey(Player, on_delete=models.CASCADE)
-    series = models.ForeignKey(Series, related_name='demos', on_delete=models.CASCADE, null=True, blank=True)
+    hash = models.CharField(primary_key=True, max_length=64, default="")
+    match = models.ForeignKey(Match, on_delete=models.SET_NULL,null=True)
+
+    def __str__(self):
+        return f"{self.file.name} uploaded by {self} "
+    
+class UploadedDemoFile(models.Model):
+    demo = models.ForeignKey(UploadedDemo, on_delete=models.SET_NULL, null=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     file = models.FileField(upload_to='demos/')
     description = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.file.name} uploaded by {self.uploaded_by.nick_name} for {self.team.name}"
+        return f"{self.file.name} uploaded by {self} "
 
 
 

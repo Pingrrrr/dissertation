@@ -13,7 +13,7 @@ import json
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
-from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy
+from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy,UploadedDemoFile
 from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
 from .decorators import unauthenicated_user, allowed_users
 
@@ -301,8 +301,8 @@ def series_detail(request, series_id):
 def match_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     
-    team_a_players = match.team_a.players.all()
-    team_b_players = match.team_b.players.all()
+    team_a_players = match.team_a_lineup.players.all()
+    team_b_players = match.team_b_lineup.players.all()
 
     team_a_stats = match.stat_set.filter(player__in=team_a_players).order_by('-adr')
     team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
@@ -315,13 +315,13 @@ def match_detail(request, match_id):
         12: "TimeOut",
     }
     
-    related_demos = UploadedDemo.objects.filter(team=match.team_a)
+    related_demos = UploadedDemo.objects.filter(match=match)
 
     context = {
         'match': match,
         'rounds': match.round_set.all(),
-        'team_a_stats': team_a_stats,
-        'team_b_stats': team_b_stats,
+        'team_a_stats': team_a_stats.filter(side='ALL'),
+        'team_b_stats': team_b_stats.filter(side='ALL'),
         'round_end_reasons': round_end_reasons,
         'related_demos': related_demos,  
     }
@@ -348,17 +348,17 @@ def team_comms(request, team_id):
     notifications = player.notifications.all()[:5]  # Limit to 5 notifications
 
     if request.method == 'POST':
-        form = DemoUploadForm(request.POST, request.FILES, team=team)
+        form = DemoUploadForm(request.POST, request.FILES)
         if form.is_valid():
             demo = form.save(commit=False)
-            demo.team = team
+
             demo.uploaded_by = player
             demo.save()
             return redirect('team_comms', team_id=team.id)
     else:
-        form = DemoUploadForm(team=team)
+        form = DemoUploadForm()
     
-    uploaded_demos = UploadedDemo.objects.filter(team=team)
+    uploaded_demos = UploadedDemoFile.objects.filter(uploaded_by=request.user)
 
     return render(request, 'stats/team_comms.html', {
         'team': team,
@@ -376,7 +376,7 @@ def teams(request):
 def player_detail(request, player_id):
     player = get_object_or_404(Player, steam_id=player_id)
     team = get_object_or_404(Team, players=player_id)
-    recent_stats = Stat.objects.filter(player=player).order_by('-match__date')[:5]
+    recent_stats = Stat.objects.filter(player=player).filter(side='ALL').order_by('-match__date')[:5]
 
 
     return render(request, 'stats/player_detail.html', {
