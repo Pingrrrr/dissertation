@@ -460,49 +460,45 @@ def getHash(file):
     return hash.hexdigest()
 
 
-filename = r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem"
-hash = getHash(filename)
+def parseFile(filename, overwriteExisting=False):
 
-#make an upload file
-uploadDemoFile = UploadedDemoFile.objects.create(file=filename)
+    hash = getHash(filename)
 
-#check if the file has already been uploaded
-try:
-    uploadedDemo = UploadedDemo.objects.get(hash=hash)
-except UploadedDemo.DoesNotExist:
-    uploadedDemo = UploadedDemo(
-        hash=hash,
-    )
-    uploadedDemo.save()
+    #make an upload file if ti doesnt exits yet
+    uploadDemoFile = UploadedDemoFile.objects.get_or_create(file=filename)
 
-uploadDemoFile.demo=uploadedDemo
-uploadDemoFile.save()
+    #check if the file has already been uploaded
+    exists=False
+    try:
+        uploadedDemo = UploadedDemo.objects.get(hash=hash)
+        exists=True
+    except UploadedDemo.DoesNotExist:
+        uploadedDemo = UploadedDemo(
+            hash=hash,
+        )
+        uploadedDemo.save()
 
-
-#else:
-    #are you sure you want to reprocess this demo file?
-
-
-dem = Demo(filename, ticks=True)
-#dem = Demo(r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m2-anubis.dem", ticks=True)
+    uploadDemoFile.demo=uploadedDemo
+    uploadDemoFile.save()
 
 
-#series 1
-#series = Series.objects.get(id=1)
-#make a new series
-
-
-#ct_team = dem.events['begin_new_match'][['ct_team_clan_name']]
-#t_team = dem.events['begin_new_match'][['t_team_clan_name']]
-
-#team_a = Team.objects.get(id=1) #navi
-#team_b = Team.objects.get(id=2) #vp
-
-#series = Series(team_a=team_a, team_b=team_b, best_of=3)
-#series.save()
-
-
-
-tickRate = determineTickRate(demo=dem)
-parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate)
+    if not exists or overwriteExisting:
+        uploadDemoFile.status = 'processing'
+        uploadDemoFile.save()
         
+        try:
+            dem = Demo(filename, ticks=True)
+            tickRate = determineTickRate(demo=dem)
+            parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate)
+
+            uploadDemoFile.status = 'complete'
+            uploadDemoFile.save()
+
+        except:
+            uploadDemoFile.status = 'error'
+            uploadDemoFile.save()
+        
+
+#manual run   
+#filename = r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem"
+#parseFile(filename)

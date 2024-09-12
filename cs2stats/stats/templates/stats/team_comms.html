@@ -47,14 +47,19 @@
         </div>
     </div>
 
-    <form id="commentForm" method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="card mb-4 bg-dark text-white">
             <div class="card-header">
                 Upload Demo
             </div>
             <div class="card-body">
-                {{ form.as_p }}
+                <div class="mb-3">
+                    <input class="form-control" type="file" name="file" accept=".dem">
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control"  placeholder="description">
+                </div>
                 <button type="submit" class="btn btn-primary">Upload File</button>
                 {% if form.errors %}
                 <div class="alert alert-danger mt-2">
@@ -62,8 +67,20 @@
                 </div>
                 {% endif %}
             </div>
+
+            <div id="progress" class="progress" role="progressbar">
+                <div id="progress_bar" class="progress-bar" style="width: 0%"></div>
+              </div>
+              
+
+            <div id="progressContainer" style="display: none;">
+                <div id="progressBar" style="width: 0%; height: 20px; background-color: green;"></div>
+            </div>
+            <p id="status"></p>
         </div>
     </form>
+
+
 
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
@@ -155,6 +172,8 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'upload_demo.js' %}"></script>
 
 
 <style>

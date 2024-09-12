@@ -20,6 +20,7 @@ class CreateTeamForm(forms.ModelForm):
 #https://docs.djangoproject.com/en/5.1/topics/http/file-uploads/
 class DemoUploadForm(forms.ModelForm):
 
+
     class Meta:
         model = UploadedDemoFile
         fields = ['file', 'description']  

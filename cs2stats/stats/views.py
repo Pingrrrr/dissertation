@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy,UploadedDemoFile
 from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
 from .decorators import unauthenicated_user, allowed_users
+from .demo import *
 
 from django.contrib.auth.decorators import login_required
 
@@ -352,9 +353,10 @@ def team_comms(request, team_id):
         if form.is_valid():
             demo = form.save(commit=False)
 
-            demo.uploaded_by = player
+            demo.uploaded_by = user
             demo.save()
-            return redirect('team_comms', team_id=team.id)
+            return JsonResponse({'message': 'File upload submitted'})
+        return JsonResponse({'error': 'Something went wrong'}, status=400)
     else:
         form = DemoUploadForm()
     
@@ -366,6 +368,7 @@ def team_comms(request, team_id):
         'uploaded_demos': uploaded_demos,
         'notifications': notifications,  
     })
+
 
 
 def teams(request):
@@ -396,4 +399,8 @@ def view_notifications(request):
     }
     return render(request, 'notifications.html', context)
 
+def parsedemo(request, uploaded_file_id):
+    # check current status of the id
 
+    #if unprocessed, begin processing
+    return JsonResponse({'status': 'Unknown'})

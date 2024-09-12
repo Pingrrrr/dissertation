@@ -30,7 +30,9 @@ urlpatterns = [
     path('create_strategy/', views.create_strategy, name='create_strategy'),
     path('strategy/addStrategy/', views.add_strategy, name='add_strategy'),
     path('strategy/<int:strategy_id>/', views.strategy, name='strategy'),
-    path('strategy/<int:strategy_id>/canvas', views.strategy_canvas,  name='strategy_canvas')
+    path('strategy/<int:strategy_id>/canvas', views.strategy_canvas,  name='strategy_canvas'),
+
+    path('parsedemo/<int:uploaded_file_id>', views.parsedemo, name='parsedemo'),
    
 
     

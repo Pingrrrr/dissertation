@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 
 
 class Team(models.Model):
@@ -247,9 +248,10 @@ class UploadedDemo(models.Model):
 class UploadedDemoFile(models.Model):
     demo = models.ForeignKey(UploadedDemo, on_delete=models.SET_NULL, null=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    file = models.FileField(upload_to='demos/')
+    file = models.FileField(upload_to='demos/', validators=[FileExtensionValidator(allowed_extensions=['dem'])])
     description = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, default='unknown')
 
     def __str__(self):
         return f"{self.file.name} uploaded by {self} "
