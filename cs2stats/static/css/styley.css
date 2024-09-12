@@ -1,14 +1,36 @@
 .dark-mode-section {
-  background-color: #1e1e1e;
-  color: #e0e0e0;
+  background-color: #1e1e1e; 
+  color: #e0e0e0;            
 }
 
 .dark-mode-section .btn-primary {
-  background-color: #6200ee;
+  background-color: #ff6600; 
+  color: #ffffff;            
+  border: 1px solid #cc5200; 
 }
 
 .dark-mode-section .btn-primary:hover {
-  background-color: #3700b3;
+  background-color: #cc5200; 
+  color: #ffffff;            
+  border-color: #b34700;    
+}
+.btn-primary {
+  background-color: #ff6600;
+  color: #ffffff;            
+  border: 1px solid #cf5200; 
+  border-radius: 4px;       
+  padding: 10px 20px;       
+  font-size: 14px;          
+  text-align: center;       
+  display: inline-block;    
+  text-decoration: none;    
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s; 
+}
+
+.btn-primary:hover {
+  background-color: #cc5200; 
+  color: #ffffff;            
+  border-color: #b34700;    
 }
 
 body {
@@ -18,7 +40,7 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* Navbar Styles */
+
 .navbar-dark {
   background-color: #1c1c1c;
 }
@@ -27,7 +49,7 @@ body {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.navbar-dark .navbar-nav .nav-link:hover,
+
 .navbar-dark .navbar-nav .nav-link.active {
   color: #fff;
 }
@@ -60,27 +82,17 @@ body {
 }
 
 
-.btn-primary {
-  background-color: #6200ee;
-  border: none;
-}
-
-.btn-primary:hover {
-  background-color: #3700b3;
-}
-
-/* Dark Mode for Sections with Light Backgrounds */
 .bg-light {
   background-color: #1e1e1e;
   color: #e0e0e0;
 }
 
 .bg-light .btn-primary {
-  background-color: #6200ee;
+  background-color: #ff8800;
 }
 
 .bg-light .btn-primary:hover {
-  background-color: #3700b3;
+  background-color: #ff8800;
 }
 
 /* Card Shadows */
