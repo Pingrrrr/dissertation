@@ -98,6 +98,7 @@
                         Series</a>
                     {% endif %}
                     <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
+                    <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2" >View</a>
                 </li>
                 {% endfor %}
             </ul>

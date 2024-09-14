@@ -354,6 +354,7 @@ def team_comms(request, team_id):
             demo = form.save(commit=False)
 
             demo.uploaded_by = user
+            demo.status = 'pending'
             demo.save()
             return JsonResponse({'message': 'File upload submitted'})
         return JsonResponse({'error': 'Something went wrong'}, status=400)
@@ -399,8 +400,21 @@ def view_notifications(request):
     }
     return render(request, 'notifications.html', context)
 
-def parsedemo(request, uploaded_file_id):
-    # check current status of the id
+def demo(request, uploaded_file_id):
+    demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)
+    demo = demoFile.demo
 
-    #if unprocessed, begin processing
-    return JsonResponse({'status': 'Unknown'})
+    return render(request, 'stats/demo.html', {'demoFile':demoFile, 'demo':demo})
+
+
+def parsedemo(request, uploaded_file_id):
+    print(request.GET.get('override'))
+    
+    demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)
+    if demoFile.status == 'pending' or demoFile.status == 'unknown' or request.GET.get('override')=='true':
+        demoFile.status = 'processing'
+        demoFile.save()
+        parseFile(demoFile.id)
+
+    return redirect('demo', uploaded_file_id=demoFile.id)
+

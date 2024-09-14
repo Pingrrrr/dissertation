@@ -50,7 +50,7 @@ class Match(models.Model):
     tick_rate = models.IntegerField(default=64)
 
     def __str__(self):
-        return f"{self.map} : {self.team_a} vs {self.team_b}"
+        return f"{self.map} : {self.team_a_lineup.clanName} vs {self.team_b_lineup.clanName}"
     
     
 class Round(models.Model):

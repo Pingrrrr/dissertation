@@ -15,6 +15,7 @@ from awpy.stats import adr
 from awpy.stats import kast
 from awpy.stats import rating
 from django.db.models import Q
+from huey.contrib.djhuey import task, db_task, on_commit_task
 import pandas as pd
 
 
@@ -460,12 +461,15 @@ def getHash(file):
     return hash.hexdigest()
 
 
-def parseFile(filename, overwriteExisting=False):
 
+@on_commit_task()
+def parseFile(fileUploadId, overwriteExisting=False):
+
+    print(f" recieved file upload id  to parse: {fileUploadId}")
+    uploadDemoFile = UploadedDemoFile.objects.get(id=fileUploadId)
+    filename=uploadDemoFile.file.path
+    print(f" file to parse: {filename}")
     hash = getHash(filename)
-
-    #make an upload file if ti doesnt exits yet
-    uploadDemoFile = UploadedDemoFile.objects.get_or_create(file=filename)
 
     #check if the file has already been uploaded
     exists=False
@@ -475,6 +479,7 @@ def parseFile(filename, overwriteExisting=False):
 
         uploadDemoFile.status = 'complete'
         uploadDemoFile.save()
+        print(f" file already parsed: {filename}")
     except UploadedDemo.DoesNotExist:
         uploadedDemo = UploadedDemo(
             hash=hash,
@@ -486,6 +491,7 @@ def parseFile(filename, overwriteExisting=False):
 
 
     if not exists or overwriteExisting:
+        print(f" file processing: {filename}")
         uploadDemoFile.status = 'processing'
         uploadDemoFile.save()
         
@@ -494,14 +500,17 @@ def parseFile(filename, overwriteExisting=False):
             tickRate = determineTickRate(demo=dem)
             parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate)
 
+
             uploadDemoFile.status = 'complete'
             uploadDemoFile.save()
+            print(f" file processing complete: {filename}")
 
-        except:
+        except Exception as error:
             uploadDemoFile.status = 'error'
             uploadDemoFile.save()
+            print(f" file processing error : {filename} : {error}")
         
 
 #manual run   
-#filename = r"C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem"
-#parseFile(filename)
+#file = UploadedDemoFile.objects.create(file="C:\Users\laura\Downloads\natus-vincere-vs-virtus-pro-m1-overpass.dem")
+#parseFile(file.id)

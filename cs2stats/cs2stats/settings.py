@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from huey import SqliteHuey
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,9 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'stats',
+    'huey.contrib.djhuey',
     
     
 ]
+
+HUEY = SqliteHuey(filename='cs2stats.db')
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

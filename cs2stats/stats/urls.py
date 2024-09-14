@@ -33,6 +33,7 @@ urlpatterns = [
     path('strategy/<int:strategy_id>/canvas', views.strategy_canvas,  name='strategy_canvas'),
 
     path('parsedemo/<int:uploaded_file_id>', views.parsedemo, name='parsedemo'),
+    path('demo/<int:uploaded_file_id>', views.demo, name='demo'),
    
 
     

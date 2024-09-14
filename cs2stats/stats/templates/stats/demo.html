@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Demo {% endblock %}
+
+{% block content %}
+
+<div class="container">
+<div class="card mb-4 bg-dark text-white">
+    <div class="card-header">
+        Demo
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+
+            <li class="list-group-item bg-dark text-white">
+                <strong>{{ demoFile.file }}</strong>: {{ demoFile.status }}
+            </li>
+            {% if demo %}
+            <li class="list-group-item bg-dark text-white">
+                <strong>{{ demo.match }}</strong>
+                <a href="{% url 'match_detail' demo.match.id %}" class="btn btn-sm btn-primary ml-2">View Match</a>
+            </li>
+            {% endif %}
+
+
+        </ul>
+    </div>
+</div>
+</div>
+
+{% endblock %}
