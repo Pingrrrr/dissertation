@@ -1,5 +1,6 @@
 #https://stackoverflow.com/a/24456404
 import datetime
+import json
 import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
@@ -10,22 +11,25 @@ from stats.models import Player, Match, Stat, Team, Series, Round, Kills
 #https://docs.djangoproject.com/en/5.0/ref/exceptions/
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from stats.demo import getPlayerPositions, determineTickRate
 
 
 
-match = Match.objects.get(id=1)
-for round in match.round_set.all():
-    for kill in round.kills_set.all():
-        #find kills from the last few seconds
-        prevKills = round.kills_set.filter(tick__lt=kill.tick).filter(tick__gt=kill.tick-(5*128))
+dem = Demo(r"media\demos\complexity-vs-natus-vincere-m2-nuke.dem", ticks=True)
 
-        #if the victim of this kill was the attacker of a recent kill, we can mark that previous kill as a trade
-        if prevKills.filter(attacker_ID=kill.victim_ID).exists():
-            #only the most recent kill will get marked as traded so we dont allow a player to get traded more than once
-            prevKill = prevKills.filter(attacker_ID=kill.victim_ID).order_by('-tick')[:1]
-            pk = Kills.objects.get(id=prevKill)
-            pk.tradedBy = kill.id
-            pk.save()
-            print(f"Round {round.round_num} : {pk.victim_ID} was traded by {kill.id}")
+pos = getPlayerPositions(dem, 2, determineTickRate(dem))
+pos['playerPositions']=pos['playerPositions'][403:404]
+pos['grenades']=pos['grenades'][403:404]
+pos['weaponFires']=pos['weaponFires'][403:404]
+print(len(pos['playerPositions']))
+print(len(pos['grenades']))
+print(len(pos['weaponFires']))
+print(json.dumps(pos, indent=4))
+#    return {"playerPositions":playerPos, "grenades":grenades, "weaponFires":weaponFires}
+#print(getPlayerPositions(dem, 1, determineTickRate(dem)))
 
+
+#r=Round.objects.get(id=133)
+#r.ticks=pos
+#r.save()
 

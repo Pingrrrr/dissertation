@@ -13,9 +13,9 @@ class Team(models.Model):
     
 class Player(models.Model):
     user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
-    nick_name = models.CharField(max_length=100, default='Unknown Nickname')
-    real_name = models.CharField(max_length=100, default='Unknown Real Name')
-    nationality = models.CharField(max_length=50, default='Unknown Nationality')
+    nick_name = models.CharField(max_length=100, null=True)
+    real_name = models.CharField(max_length=100, null=True)
+    nationality = models.CharField(max_length=50, null=True)
     age = models.IntegerField(default=0)
     bio = models.TextField(default='No biography available.')
     image_url = models.URLField(blank=True, default='')  

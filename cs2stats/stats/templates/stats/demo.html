@@ -14,8 +14,13 @@
 
             <li class="list-group-item bg-dark text-white">
                 <strong>{{ demoFile.file }}</strong>: {{ demoFile.status }}
+                {% if demoFile.status == 'error' %}
+                    <a href="{% url 'parsedemo' demoFile.id %}" class="btn btn-sm btn-primary ml-2" >Retry</a>
+                {% endif %}
+
+
             </li>
-            {% if demo %}
+            {% if demo.match %}
             <li class="list-group-item bg-dark text-white">
                 <strong>{{ demo.match }}</strong>
                 <a href="{% url 'match_detail' demo.match.id %}" class="btn btn-sm btn-primary ml-2">View Match</a>

@@ -15,6 +15,7 @@ from awpy.stats import adr
 from awpy.stats import kast
 from awpy.stats import rating
 from django.db.models import Q
+from django.db import connection
 from huey.contrib.djhuey import task, db_task, on_commit_task
 import pandas as pd
 
@@ -42,7 +43,7 @@ def determineTrades(match, tradeTime, tickRate):
 
 
 players={}
-def getPlayer(steamId):
+def getPlayer(steamId, name=None):
     if not steamId or steamId==None or steamId=='None':
         return None
     if steamId in players.keys():
@@ -53,6 +54,9 @@ def getPlayer(steamId):
             players[steamId] = player
         except Player.DoesNotExist:
             player = Player.objects.create(steam_id=steamId)
+            if name:
+                player.nick_name=name
+                player.save()
             players[steamId] =player
         return player
 
@@ -65,7 +69,7 @@ def getPlayerPositions(dem, roundNum, tickRate):
 
     weaponFiresTicks = dem.weapon_fires[dem.weapon_fires['round']==roundNum]
     weaponFiresTicks = weaponFiresTicks[['player_steamid','player_name','tick','player_X','player_Y','player_Z','player_yaw','weapon','player_accuracy_penalty']]
-
+    weaponFiresTicks = weaponFiresTicks.fillna(0)
 
     startTick = roundTicks.head(1)['tick'].values[0]
     endTick = roundTicks.tail(1)['tick'].values[0]
@@ -114,7 +118,7 @@ def processPlayerTicks(dem, match):
         try:
             player = Player.objects.get(steam_id=tick['steamid'])
         except Player.DoesNotExist:
-            print(f"Attacker with steam_id {tick['steamid']} does not exist")
+            print(f"player with steam_id {tick['steamid']} does not exist")
             player = None
         
         pt = PlayerTick(
@@ -141,7 +145,7 @@ def processGrenades(dem, round):
     print(f"Processing grenades for round {round.round_num}")
     grenades = []
     for index, grenade in dem.grenades.iterrows():
-        player = getPlayer(grenade['thrower_steamid'])
+        player = getPlayer(grenade['thrower_steamid'], grenade['thrower'])
         
         g = Grenade(
             round=round,
@@ -204,7 +208,7 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
     ctTeam.clanName = initialTick[initialTick['team_name']=="CT"].iloc[0]['team_clan_name']
     tTeam.clanName = initialTick[initialTick['team_name']=="TERRORIST"].iloc[0]['team_clan_name']
     for index, tick in initialTick.iterrows():
-        player = getPlayer(tick['steamid'])
+        player = getPlayer(tick['steamid'], tick['name'])
         if not player.nick_name:
             player.nick_name=tick['name']
         if tick['team_name']=="CT":
@@ -269,9 +273,9 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
             continue
         
         #Not all kills will have assisters or even attackers as players can be killed by bomb or falling
-        attacker = getPlayer(kill['attacker_steamid'])
-        assister = getPlayer(kill['assister_steamid'])
-        victim = getPlayer(kill['victim_steamid'])
+        attacker = getPlayer(kill['attacker_steamid'], kill['attacker_name'])
+        assister = getPlayer(kill['assister_steamid'], kill['assister_name'])
+        victim = getPlayer(kill['victim_steamid'], kill['victim_name'])
 
         if round:
             k = Kills(
@@ -350,6 +354,7 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
         except Player.DoesNotExist:
             print(f"Player with steam_id {steam_id} does not exist")
             continue
+
         print(f"processing stats for {player_instance.nick_name} with steam id: {steam_id}")
 
         
@@ -475,11 +480,11 @@ def parseFile(fileUploadId, overwriteExisting=False):
     exists=False
     try:
         uploadedDemo = UploadedDemo.objects.get(hash=hash)
-        exists=True
-
-        uploadDemoFile.status = 'complete'
-        uploadDemoFile.save()
-        print(f" file already parsed: {filename}")
+        if uploadedDemo.match:
+            exists=True
+            uploadDemoFile.status = 'complete'
+            uploadDemoFile.save()
+            print(f" file already parsed: {filename}")
     except UploadedDemo.DoesNotExist:
         uploadedDemo = UploadedDemo(
             hash=hash,
@@ -505,10 +510,17 @@ def parseFile(fileUploadId, overwriteExisting=False):
             uploadDemoFile.save()
             print(f" file processing complete: {filename}")
 
-        except Exception as error:
+        #have to catch BaseException due to bug in awpy/polars
+        # https://stackoverflow.com/a/76379260
+        except (Exception, BaseException) as error:
+
+            if uploadedDemo.match:
+                 uploadedDemo.match.delete()
+
             uploadDemoFile.status = 'error'
             uploadDemoFile.save()
             print(f" file processing error : {filename} : {error}")
+            print(f"last query: {connection.queries[-1]}")
         
 
 #manual run   

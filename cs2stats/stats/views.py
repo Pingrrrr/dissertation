@@ -20,6 +20,8 @@ from .demo import *
 
 from django.contrib.auth.decorators import login_required
 
+demoParseTasks = {}
+
 def index(request):
     teams = Team.objects.all()
     return render(request, 'stats/index.html', {'teams': teams})
@@ -309,11 +311,16 @@ def match_detail(request, match_id):
     team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
 
     round_end_reasons = {
-        1: "Bomb detonation",
-        7: "Bomb defused",
-        8: "T Elimination",
-        9: "CT Elimination",
-        12: "TimeOut",
+        '1': "Bomb detonation",
+        '7': "Bomb defused",
+        '8': "T Elimination",
+        '9': "CT Elimination",
+        '12': "TimeOut",
+        'bomb_exploded': "Bomb detonation",
+        'bomb_defused': "Bomb defused",
+        't_killed': "T Elimination",
+        'ct_killed': "CT Elimination",
+        'time_ran_out': "TimeOut",
     }
     
     related_demos = UploadedDemo.objects.filter(match=match)
@@ -356,7 +363,7 @@ def team_comms(request, team_id):
             demo.uploaded_by = user
             demo.status = 'pending'
             demo.save()
-            return JsonResponse({'message': 'File upload submitted'})
+            return redirect('parsedemo', uploaded_file_id=demo.id)
         return JsonResponse({'error': 'Something went wrong'}, status=400)
     else:
         form = DemoUploadForm()
@@ -390,7 +397,6 @@ def player_detail(request, player_id):
         
     })
 
-
 def view_notifications(request):
     player = Player.objects.get(user=request.user)
     player.notifications.filter(is_read=False).update(is_read=True)
@@ -402,8 +408,8 @@ def view_notifications(request):
 
 def demo(request, uploaded_file_id):
     demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)
-    demo = demoFile.demo
 
+    demo = demoFile.demo
     return render(request, 'stats/demo.html', {'demoFile':demoFile, 'demo':demo})
 
 
@@ -411,10 +417,12 @@ def parsedemo(request, uploaded_file_id):
     print(request.GET.get('override'))
     
     demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)
-    if demoFile.status == 'pending' or demoFile.status == 'unknown' or request.GET.get('override')=='true':
+    if demoFile.status == 'pending' or demoFile.status == 'unknown' or demoFile.status == 'error' or request.GET.get('override')=='true':
         demoFile.status = 'processing'
         demoFile.save()
-        parseFile(demoFile.id)
+        task = parseFile(demoFile.id)
+        demoParseTasks[demoFile.id] = task
+
 
     return redirect('demo', uploaded_file_id=demoFile.id)
 

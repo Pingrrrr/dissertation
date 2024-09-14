@@ -5,7 +5,7 @@ register = template.Library()
 @register.filter
 def dict_key(dictionary, key):
     try:
-        key = int(key)
+        key = str(key)
     except (ValueError, TypeError):
         return 'Unknown Reason'
     
