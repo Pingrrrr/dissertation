@@ -472,6 +472,9 @@ def parseFile(filename, overwriteExisting=False):
     try:
         uploadedDemo = UploadedDemo.objects.get(hash=hash)
         exists=True
+
+        uploadDemoFile.status = 'complete'
+        uploadDemoFile.save()
     except UploadedDemo.DoesNotExist:
         uploadedDemo = UploadedDemo(
             hash=hash,
