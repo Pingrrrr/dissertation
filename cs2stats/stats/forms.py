@@ -19,11 +19,15 @@ class CreateTeamForm(forms.ModelForm):
 
 #https://docs.djangoproject.com/en/5.1/topics/http/file-uploads/
 class DemoUploadForm(forms.ModelForm):
-
+    file=forms.FileField()
+    description=forms.CharField(required=False)
+    series_id=forms.ModelChoiceField(queryset=Series.objects.none(), empty_label="Create new series", required=False)
+    link_team = forms.BooleanField(required=False, initial=True, label="Link my team to this match")
+    match_date = forms.DateField(widget=forms.SelectDateWidget)
 
     class Meta:
         model = UploadedDemoFile
-        fields = ['file', 'description']  
+        fields = ['file', 'description', 'series_id']  
 
 
 

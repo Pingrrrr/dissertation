@@ -54,12 +54,8 @@
                 Upload Demo
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <input class="form-control" type="file" name="file" accept=".dem">
-                </div>
-                <div class="mb-3">
-                    <input type="text" class="form-control"  placeholder="description">
-                </div>
+                {{ form }}
+
                 <button type="submit" class="btn btn-primary">Upload File</button>
                 {% if form.errors %}
                 <div class="alert alert-danger mt-2">
@@ -90,6 +86,7 @@
             <ul class="list-group">
                 {% for demo in uploaded_demos %}
                 <li class="list-group-item bg-dark text-white">
+                    <div>
                     <strong>{{ demo.file.name }}</strong> by {{ demo.uploaded_by.nick_name }}
                     <span class="timestamp"> - {{ demo.uploaded_at }}</span>
 
@@ -99,9 +96,13 @@
                     {% endif %}
                     <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
                     <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2" >View</a>
+                </div>
+                    <small>uploaded by: {{demo.uploaded_by}}</small>
                 </li>
                 {% endfor %}
             </ul>
+            <div class="my-3"><a href="{% url 'demos' team.id %}" class="btn btn-sm btn-primary ml-2" >View All</a></div>
+            
         </div>
     </div>
 

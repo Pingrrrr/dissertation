@@ -212,10 +212,13 @@ def round_view(request, round_id):
     
     comment_to_highlight = Comment.objects.filter(round=round, id=request.GET.get('comment_id')).first()
     kills = round.kills_set.all().order_by('tick')
+    map = round.match_id.map
+    mapUrl = f"maps/{map}.png"
 
 
     return render(request, 'stats/round_view.html', {
-        'maps': maps,
+        'map': map,
+        'mapUrl':mapUrl,
         'round': round,
         'form': form,
         'kills':kills,
@@ -264,17 +267,12 @@ def team_detail(request, team_id):
 def series_detail(request, series_id):
     series = get_object_or_404(Series, id=series_id)
     
-
-    if series.team_a is None or series.team_b is None:
-        return HttpResponse("One or both teams are not set for this series.", status=400)
-
     matches = []
-    team_wins = {series.team_a.id: 0, series.team_b.id: 0} 
 
     for match in series.matches.all():
-        team_a_wins = match.round_set.filter(winningTeam=match.team_a).count()
-        team_b_wins = match.round_set.filter(winningTeam=match.team_b).count()
-        winner = match.team_a if team_a_wins > team_b_wins else match.team_b
+        team_a_wins = match.round_set.filter(winningTeam=match.team_a_lineup).count()
+        team_b_wins = match.round_set.filter(winningTeam=match.team_b_lineup).count()
+        winner = match.team_a_lineup if team_a_wins > team_b_wins else match.team_b_lineup
         matches.append({
             'match': match,
             'team_a_wins': team_a_wins,
@@ -282,23 +280,11 @@ def series_detail(request, series_id):
             'winner': winner
         })
 
-        if team_a_wins > team_b_wins:
-            team_wins[series.team_a.id] += 1
-        else:
-            team_wins[series.team_b.id] += 1
 
- 
-    series_winner_id = max(team_wins, key=team_wins.get)
-    series_winner = Team.objects.get(id=series_winner_id)
-
-   
-    series.winning_team = series_winner
-    series.save()
 
     return render(request, 'stats/series_detail.html', {
         'series': series,
         'matches': matches,
-        'series_winner': series_winner
     })
 
 def match_detail(request, match_id):
@@ -340,6 +326,7 @@ def match_detail(request, match_id):
 @allowed_users(allowed_roles=['Player', 'Coach'])
 def team_comms(request, team_id):
     team = get_object_or_404(Team, id=team_id)
+    series = Series.objects.filter(matches__teams=team).distinct()
     user = request.user
 
     
@@ -355,23 +342,39 @@ def team_comms(request, team_id):
     
     notifications = player.notifications.all()[:5]  # Limit to 5 notifications
 
+    form = DemoUploadForm()
+    form.fields['series_id'].queryset = series
+
     if request.method == 'POST':
         form = DemoUploadForm(request.POST, request.FILES)
+        form.fields['series_id'].queryset = series
+        print(form["series_id"].value())
+        print(form["link_team"].value())
         if form.is_valid():
+            print(form.cleaned_data["series_id"])
             demo = form.save(commit=False)
-
             demo.uploaded_by = user
+            options={}
+            if form.cleaned_data["series_id"]:
+                options['series_id']=form.cleaned_data["series_id"].id
+
+            if form.cleaned_data["link_team"]:
+                options['team_id']=team.id
+
+            demo.options=options
+
             demo.status = 'pending'
             demo.save()
             return redirect('parsedemo', uploaded_file_id=demo.id)
+        print(f"form isnt valid: {form.errors}")
         return JsonResponse({'error': 'Something went wrong'}, status=400)
-    else:
-        form = DemoUploadForm()
+
     
-    uploaded_demos = UploadedDemoFile.objects.filter(uploaded_by=request.user)
+    uploaded_demos = UploadedDemoFile.objects.filter(Q(uploaded_by=request.user) or Q(uploaded_by__in=team.players)).order_by('-uploaded_at')[:5]
 
     return render(request, 'stats/team_comms.html', {
         'team': team,
+        'series':series,
         'form': form,
         'uploaded_demos': uploaded_demos,
         'notifications': notifications,  
@@ -412,15 +415,21 @@ def demo(request, uploaded_file_id):
     demo = demoFile.demo
     return render(request, 'stats/demo.html', {'demoFile':demoFile, 'demo':demo})
 
+def demos(request, team_id):
+    team = get_object_or_404(Team, id=team_id)
+    uploaded_demos = UploadedDemoFile.objects.filter(Q(uploaded_by=request.user) or Q(uploaded_by__in=team.players))
+    return render(request, 'stats/demos.html', {'uploaded_demos': uploaded_demos})
 
-def parsedemo(request, uploaded_file_id):
+
+def parsedemo(request, uploaded_file_id, series_id=None):
     print(request.GET.get('override'))
     
     demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)
     if demoFile.status == 'pending' or demoFile.status == 'unknown' or demoFile.status == 'error' or request.GET.get('override')=='true':
         demoFile.status = 'processing'
         demoFile.save()
-        task = parseFile(demoFile.id)
+        
+        task = parseFile(demoFile.id, options=demoFile.options)
         demoParseTasks[demoFile.id] = task
 
 

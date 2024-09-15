@@ -27,7 +27,7 @@
             {% for series in recent_series %}
             <li class="list-group-item bg-dark text-light">
                 <a href="{% url 'series_detail' series.id %}" class="text-light">
-                    <strong>{{ series.team_a.name }} vs {{ series.team_b.name }}</strong>
+                    <strong>{{ series.title }}</strong>
                 </a>
                 <p>
                     Winner:
@@ -41,14 +41,7 @@
                 <ul>
                     {% for match in series.matches.all %}
                     <li>
-                        {{ match.date }} - Map: {{ match.map }} - Winner:
-                        {% if match.team_a == series.winning_team %}
-                        {{ match.team_a.name }}
-                        {% elif match.team_b == series.winning_team %}
-                        {{ match.team_b.name }}
-                        {% else %}
-                        TBD
-                        {% endif %}
+                        {{ match.date }} - Map: {{ match.map }}
                     </li>
                     {% endfor %}
                 </ul>

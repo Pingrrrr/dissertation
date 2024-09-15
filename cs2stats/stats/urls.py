@@ -32,8 +32,11 @@ urlpatterns = [
     path('strategy/<int:strategy_id>/', views.strategy, name='strategy'),
     path('strategy/<int:strategy_id>/canvas', views.strategy_canvas,  name='strategy_canvas'),
 
-    path('parsedemo/<int:uploaded_file_id>', views.parsedemo, name='parsedemo'),
+    path('parsedemo/<int:uploaded_file_id>/', views.parsedemo, name='parsedemo'),
     path('demo/<int:uploaded_file_id>', views.demo, name='demo'),
+    path('demos/<int:team_id>', views.demos, name='demos'),
+
+
    
 
     

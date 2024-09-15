@@ -12,10 +12,66 @@ height = 600;
 
 //scale is used to put player co-ordinates on 1024X1024 images in awpy
 // so we can just use the scale * 1024 to find out width and length of the maps
+let maps={
+    "de_overpass" : {
+        "pos_x": -4831,
+        "pos_y": 1781,
+        "scale": 5.2,
+    },
+    "de_nuke": {
+        "pos_x": -3453,
+        "pos_y": 2887,
+        "scale": 7,
+    },
 
-const mapWidth = 1024 * 5.2
-const xScale = d3.scaleLinear().domain([-4831, (-4831 + mapWidth)]).range([0, width]);
-const yScale = d3.scaleLinear().domain([1781, (1781 - mapWidth)]).range([0, height]);
+    "de_vertigo": {
+        "pos_x": -3168,
+        "pos_y": 1762,
+        "scale": 4,
+    },
+
+    "de_ancient": {
+        "pos_x": -2953,
+        "pos_y": 2164,
+        "scale": 5,
+    },
+    "de_anubis": {
+        "pos_x": -2796,
+        "pos_y": 3328,
+        "scale": 5.22,
+    },
+    "de_dust": {
+        "pos_x": -2850,
+        "pos_y": 4073,
+        "scale": 6,
+    },
+    "de_dust2": {
+        "pos_x": -2476,
+        "pos_y": 3239,
+        "scale": 4.4,
+    },
+    "de_inferno": {
+        "pos_x": -2087,
+        "pos_y": 3870,
+        "scale": 4.9,
+    },
+    "de_inferno_s2": {
+        "pos_x": -2087,
+        "pos_y": 3870,
+        "scale": 4.9,
+    },
+    "de_mirage": {
+        "pos_x": -3230,
+        "pos_y": 1713,
+        "scale": 5,
+    }
+    
+}
+
+
+const mapWidth = 1024 * maps[map].scale;
+const xScale = d3.scaleLinear().domain([maps[map].pos_x, (maps[map].pos_x + mapWidth)]).range([0, width]);
+const yScale = d3.scaleLinear().domain([maps[map].pos_y, (maps[map].pos_y - mapWidth)]).range([0, height]);
 
 const kills = d3.json("../kills/" + round_id);
 
@@ -29,7 +85,11 @@ grenadeColours.set('he_grenade','red');
 grenadeColours.set('incendiary_grenade','orange');
 
 
+
+
 console.log('Round ID ' + round_id);
+
+
 
 d3.json("../ticks/" + round_id)
     .then(function (data) {
@@ -43,6 +103,7 @@ d3.json("../ticks/" + round_id)
         const totalUpdates = data.playerPositions.length
 
         const svg = d3.select("#minimap");
+
 
         const progressBar = document.getElementById("progressBar");
         

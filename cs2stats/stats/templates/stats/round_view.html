@@ -7,42 +7,7 @@
 <script src=" https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js "></script>
 {% load static %}
 
-<style type="text/css">
-    .bgimg {
-        background-image: url("{% static 'maps/Overpass.png' %}");
-        background-size: contain;
-        background-repeat: no-repeat;
-    }
 
-    .highlight {
-        border: 2px solid yellow;
-        background-color: #ffffdd;
-    }
-
-    .comment {
-        border-radius: 5px;
-        padding: 10px;
-        background-color: #2e2d2d;
-        color: #ffffff;
-        margin-bottom: 10px;
-    }
-
-    .comment strong {
-        color: #ffd900;
-    }
-
-    .form-section {
-        border-radius: 5px;
-        padding: 20px;
-        background-color: #3b3b3b;
-        color: #ffffff;
-        margin-top: 20px;
-    }
-
-    .form-control {
-        border-radius: 0.25rem;
-    }
-</style>
 
 <div class="container mt-4">
     <section id="user-info" class="mt-4 bg-dark text-light rounded p-3">
@@ -107,7 +72,45 @@
 <script type="text/javascript">
     console.log('Round ID ' + '{{ round.id }}');
     var round_id = '{{ round.id }}';
+    var map = '{{map}}';
 </script>
 
 <script src="{% static 'minimap.js' %}"></script>
+
+<style type="text/css">
+    .bgimg {
+        background-image: url("{% static mapUrl %}");
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+
+    .highlight {
+        border: 2px solid yellow;
+        background-color: #ffffdd;
+    }
+
+    .comment {
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #2e2d2d;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .comment strong {
+        color: #ffd900;
+    }
+
+    .form-section {
+        border-radius: 5px;
+        padding: 20px;
+        background-color: #3b3b3b;
+        color: #ffffff;
+        margin-top: 20px;
+    }
+
+    .form-control {
+        border-radius: 0.25rem;
+    }
+</style>
 {% endblock %}

@@ -25,13 +25,10 @@ class Player(models.Model):
         return self.nick_name
 
 class Series(models.Model):
-    team_a = models.ForeignKey(Team, related_name='team_a_series', on_delete=models.CASCADE)
-    team_b = models.ForeignKey(Team, related_name='team_b_series', on_delete=models.CASCADE)
-    winning_team = models.ForeignKey(Team, related_name='winning_team_series', null=True, blank=True, on_delete=models.SET_NULL)
-    best_of = models.IntegerField(default=1)
+    title = models.TextField(default='Series')
 
     def __str__(self):
-        return f"Series {self.id}: {self.team_a} vs {self.team_b} (Winner: {self.winning_team})"
+        return self.title
     
 class Lineup(models.Model):
     clanName = models.CharField(max_length=100, default='Unknown')
@@ -41,8 +38,7 @@ class Lineup(models.Model):
 
 class Match(models.Model):
     date = models.DateTimeField()
-    team_a = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_a_matches', null=True, blank=True)
-    team_b = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='team_b_matches', null=True, blank=True)
+    teams = models.ManyToManyField(Team, related_name='teams')
     team_a_lineup = models.ForeignKey(Lineup, on_delete=models.SET_NULL, related_name='team_a_lineup', null=True)
     team_b_lineup = models.ForeignKey(Lineup, on_delete=models.SET_NULL, related_name='team_b_lineup', null=True)
     map = models.CharField(max_length=100, default='Unknown')
@@ -252,9 +248,10 @@ class UploadedDemoFile(models.Model):
     description = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, default='unknown')
+    options = models.JSONField(null=True)
 
     def __str__(self):
-        return f"{self.file.name} uploaded by {self} "
+        return f"{self.file.name} uploaded by {self.uploaded_by} "
 
 
 

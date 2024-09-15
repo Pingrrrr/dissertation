@@ -2,6 +2,7 @@
 import datetime
 import hashlib
 import json
+import traceback
 import MySQLdb
 import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
@@ -197,7 +198,7 @@ def processWeaponFires(dem, match):
 
 
 
-def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
+def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
 
     #team lineouts
     print("setting up team lineouts")
@@ -228,9 +229,23 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, series=None):
     match.map = dem.header['map_name'] 
     match.tick_rate=tickRate
     match.date = django.utils.timezone.now()
+    match.save()
 
-    if series:
-        match.series = series
+    if 'series_id' in options.keys():
+        try:
+            series = Series.objects.get(id=options['series_id'])
+            if not match.series:
+                match.series = series
+        except Series.DoesNotExist:
+            print(f"series with id: {options['series_id']} not found")
+
+    if 'team_id' in options.keys():
+        try:
+            team = Team.objects.get(id=options['team_id'])
+            match.teams.add(team)
+        except Team.DoesNotExist:
+            print(f"team with id: {options['team_id']} not found")
+
     match.save()
 
     uploadedDemo.match = match
@@ -468,7 +483,7 @@ def getHash(file):
 
 
 @on_commit_task()
-def parseFile(fileUploadId, overwriteExisting=False):
+def parseFile(fileUploadId, options=None, overwriteExisting=False):
 
     print(f" recieved file upload id  to parse: {fileUploadId}")
     uploadDemoFile = UploadedDemoFile.objects.get(id=fileUploadId)
@@ -485,7 +500,7 @@ def parseFile(fileUploadId, overwriteExisting=False):
             uploadDemoFile.status = 'complete'
             uploadDemoFile.save()
             print(f" file already parsed: {filename}")
-    except UploadedDemo.DoesNotExist:
+    except (UploadedDemo.DoesNotExist, Match.DoesNotExist):
         uploadedDemo = UploadedDemo(
             hash=hash,
         )
@@ -493,6 +508,8 @@ def parseFile(fileUploadId, overwriteExisting=False):
 
     uploadDemoFile.demo=uploadedDemo
     uploadDemoFile.save()
+
+    #process options
 
 
     if not exists or overwriteExisting:
@@ -503,7 +520,7 @@ def parseFile(fileUploadId, overwriteExisting=False):
         try:
             dem = Demo(filename, ticks=True)
             tickRate = determineTickRate(demo=dem)
-            parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate)
+            parseMatchFromDemo(dem=dem, uploadedDemo=uploadedDemo, tickRate=tickRate, options=options)
 
 
             uploadDemoFile.status = 'complete'

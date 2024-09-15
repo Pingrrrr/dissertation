@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Demo {% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+<div class="card mb-4 bg-dark text-white">
+    <div class="card-header">
+        Uploaded Demos
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for demo in uploaded_demos %}
+            <li class="list-group-item bg-dark text-white">
+                <div>
+                <strong>{{ demo.file.name }}</strong> by {{ demo.uploaded_by.nick_name }}
+                <span class="timestamp"> - {{ demo.uploaded_at }}</span>
+
+                {% if demo.series %}
+                <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
+                    Series</a>
+                {% endif %}
+                <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
+                <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2" >View</a>
+            </div>
+                <small>uploaded by: {{demo.uploaded_by}}</small>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</div>
+
+{% endblock %}
