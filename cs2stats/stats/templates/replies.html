@@ -1,0 +1,26 @@
+
+<div class="list-group">
+<div id="comment-{{ reply.id }}" class="ml-4 list-group-item ">
+    <strong id="comment-user">{{ reply.author.username }} replied</strong>
+    <button class="btn btn-primary d-flex float-end reply-button" data-commentId="{{ reply.id }}">reply</button>
+    <p id="comment-text">{{ reply.text }}</p>
+    <small>
+        {% if reply.tagged_players.all %}
+            tagged: 
+            {% for player in reply.tagged_players.all %}
+                [{{ player }}] 
+            {% endfor %}
+        {% endif %}
+    </small>
+    
+    {% if reply.replies.all %}
+    {% for r in reply.replies.all %}
+        {% include 'replies.html' with reply=r %}
+    {% endfor %}
+{% endif %}
+
+</div>
+
+
+</div>
+

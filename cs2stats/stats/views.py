@@ -187,12 +187,17 @@ def round_view(request, round_id):
 
     
     round = get_object_or_404(Round, id=round_id)
+    post = round.post
+    if not post:
+        post = Post.objects.create(title=f"{round.match_id} - {round.match_id.map} : Round {round.round_num} Review")
+        round.post = post
+        round.save()
 
     if (request.method == 'POST') & (request.user.is_authenticated):
         form = CommentForm(request.POST, team=team)
         if form.is_valid()  :
             comment = form.save(commit=False)
-            comment.round = round
+            comment.post = post
             comment.author = user
             comment.save()
             form.save_m2m()  
@@ -207,23 +212,25 @@ def round_view(request, round_id):
             
             return redirect('round_view', round_id=round.id)
     else:
-        form = CommentForm()
+        form = CommentForm(team=team)
 
     
-    comment_to_highlight = Comment.objects.filter(round=round, id=request.GET.get('comment_id')).first()
+    #comment_to_highlight = Comment.objects.filter(post=post, id=request.GET.get('comment_id')).first()
     kills = round.kills_set.all().order_by('tick')
     map = round.match_id.map
     mapUrl = f"maps/{map}.png"
+    comments = post.comments.filter(parent__isnull=True)
+    #comments = post.comment_set.all()
 
 
     return render(request, 'stats/round_view.html', {
         'map': map,
+        'post':post,
+        'comments':comments,
         'mapUrl':mapUrl,
         'round': round,
         'form': form,
         'kills':kills,
-        'comment_to_highlight': comment_to_highlight,
-
     })
 
 

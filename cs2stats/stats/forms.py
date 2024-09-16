@@ -5,8 +5,6 @@ from .models import Team, UploadedDemoFile,Series, Comment, Player, Strategy
 from django.db.models import Q
 
 
-
-
 class CreateUserForm(UserCreationForm):
     class Meta:
         model = User
@@ -31,17 +29,18 @@ class DemoUploadForm(forms.ModelForm):
 
 
 
-
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['text', 'tagged_players']
+        fields = ['text', 'tagged_players', 'parent']
+        widgets = {'parent':forms.HiddenInput, 'tagged_players':forms.CheckboxSelectMultiple}
 
     def __init__(self, *args, **kwargs):
         team = kwargs.pop('team', None)
+
         super().__init__(*args, **kwargs)
+        self.fields['tagged_players'].label = 'Tag player'
         if team:
-            
             self.fields['tagged_players'].queryset = Player.objects.filter(player_team=team)
 
 

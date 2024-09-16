@@ -2,6 +2,27 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
 
+class Post(models.Model):
+    title = models.TextField()
+    content = models.TextField()
+    created_time = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    text = models.TextField()
+    tagged_players = models.ManyToManyField('Player', related_name='tagged_in_comments', blank=True)
+    created_time = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        ordering = ['created_time']
+
 
 class Team(models.Model):
     name = models.CharField(max_length=100, default='')
@@ -62,6 +83,7 @@ class Round(models.Model):
     t_endEquipmentValue = models.IntegerField(default=0)
     ct_endEquipmentValue = models.IntegerField(default=0)
     ticks = models.JSONField(null=True)
+    post = models.ForeignKey(Post, null=True, on_delete=models.SET_NULL)
     
     def __str__(self):
         return f"{self.id}"
@@ -212,19 +234,7 @@ class SeriesReviewComment(models.Model):
     def __str__(self):
         return f"{self.series_review_id}"
     
-class Comment(models.Model):
-    round = models.ForeignKey('Round', on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    text = models.TextField()
-    tagged_players = models.ManyToManyField('Player', related_name='tagged_in_comments', blank=True)
-    timestamp = models.CharField(max_length=50)  
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Comment by {self.author.username} on Round {self.round.id} at {self.timestamp}"
-
-    class Meta:
-        ordering = ['created_at']
     
 class Notification(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='notifications')

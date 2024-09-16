@@ -19,54 +19,27 @@
             <button id="playButton" class="btn btn-primary">Pause</button>
             <input id="progressBar" type="range" value="0" min="0" max="100">
         </div>
-        
+
     </section>
     <ul id="killFeed" class="list-group">
         {% for kill in kills %}
         <button class="list-group-item list-group-item-action timestampComment" id="{{kill.tick}}">
 
-            {{kill.round_time}} : {{kill.attacker_ID}} 
+            {{kill.round_time}} : {{kill.attacker_ID}}
             {% if kill.assister_ID %}
-             + {{kill.assister_ID}} 
+            + {{kill.assister_ID}}
             {% endif %}
             killed {{kill.victim_ID}} with {{kill.weapon}}
 
         </button>
         {% endfor %}
-      </ul>
+    </ul>
 </div>
 
 
 <div class="container mt-4">
-
-    <section id="comments" class="mt-4 bg-dark text-light rounded p-3">
-        <h4>Comments</h4>
-        {% if round.comments.all %}
-        <div class="list-group">
-            {% for comment in round.comments.all %}
-            <div id="comment-{{ comment.id }}"
-                class="comment {% if comment == comment_to_highlight %}highlight{% endif %}">
-                <strong>{{ comment.author.username }}</strong>: {{ comment.text }}
-                {% if comment == comment_to_highlight %}
-                <span class="badge bg-primary">Tagged</span>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-center">No comments yet.</p>
-        {% endif %}
-    </section>
-
-
-    <section class="form-section">
-        <h4>Add a Comment</h4>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Add Comment</button>
-        </form>
-    </section>
+    <h4>Comments</h4>
+    {% include 'comments.html' with comments=comments %}
 </div>
 
 <script type="text/javascript">
@@ -76,6 +49,7 @@
 </script>
 
 <script src="{% static 'minimap.js' %}"></script>
+
 
 <style type="text/css">
     .bgimg {
