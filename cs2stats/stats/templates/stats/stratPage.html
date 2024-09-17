@@ -17,14 +17,19 @@
 
 <!-- custom css here until I work out how to get the map to work with the other css-->
 <style>
-    #map-canvas {
-        border: 1px solid #444;
-        background-color: #1e1e1e;
-    }
 
-    .tools {
-        margin-top: 10px;
-    }
+.dot {
+  height: 40px;
+  width: 40px;
+  background-color: #e13636;
+  border-radius: 50%;
+  border-color: black;
+  border-style: solid;
+  display: inline-block;
+} 
+
+
+
 
     .tool-icon {
         display: inline-block;
@@ -41,7 +46,7 @@
     .tool-icon.active {
         background-color: #007bff;
         color: white;
-        border-radius: 50%;
+        border-radius: 15%;
     }
 
     .tool-icon:hover {
@@ -51,39 +56,66 @@
 </style>
 
 <div class="container">
-    <div class="row my-4">
-        <h1>CS2 Strategy Maker</h1>
-        <label for="map-selector">Choose a Map:</label>
-        <select id="map-selector">
-            {% for map in maps %}
-            <option value="{{map.name}}">{{map.name}}</option>
-            {% endfor %}
-
-        </select>
-    </div>
-    <div class="row">
-        <div class="col-sm-8">
+    <div class="row my-3">
+        <div class="col-sm align-items-center">
             <div class="map-container">
                 <canvas id="map-canvas" width="800" height="800"></canvas>
             </div>
-            <div class="tools">
-                <div id="draw" class="tool-icon" title="Draw">
+            <div class="tools row align-items-start">
+                <div id="colour" title="Colour" class="col align-items-start">
+                    <div class="dropdown ">
+
+                        <span id="colour-indicator" class="dot btn" data-bs-toggle="dropdown" style="background-color:black"></span>
+                        <ul class="dropdown-menu w-100">
+                            <li><button class="btn colour-btn"><span class="dot" style="background-color:black"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot" style="background-color:white"></span></button></li>
+                          <li><button class="btn colour-btn"><span class="dot" style="background-color:orange"></span></button></li>
+                          <li><button class="btn colour-btn"><span class="dot" style="background-color:purple"></span></button></li>
+                          <li><button class="btn colour-btn"><span class="dot" style="background-color:green"></span></button></li>
+                          <li><button class="btn colour-btn"><span class="dot" style="background-color:yellow"></span></button></li>
+                          <li><button class="btn colour-btn"><span class="dot" style="background-color:cornflowerblue"> </span></button></li>
+                        </ul>
+                      </div>
+                </div>
+                <div id="draw" class="tool-icon col align-items-start" title="Draw">
                     <i class="fas fa-pencil-alt"></i>
                 </div>
-                <div id="erase" class="tool-icon" title="Erase">
+                <div id="erase" class="tool-icon col" title="Erase">
                     <i class="fas fa-eraser"></i>
                 </div>
-                <div id="select" class="tool-icon" title="Select">
+                <div id="select" class="tool-icon col" title="Select">
                     <i class="fas fa-arrows"></i>
                 </div>
-                <div id="undo" class="tool-icon" title="Undo">
-                    <i class="fas fa-undo"></i>
+                <div id="delete" class="tool-icon col" title="Delete">
+                    <i class="fas fa-trash"></i>
                 </div>
+                <div id="player" class="tool-icon col" title="Player">
+                    <i class="fas fa-circle"></i>
+                </div>
+                <div id="smoke" class="tool-icon col" title="Smoke">
+                    <i class="bi bi-cloud-fog2-fill"></i>
+                                </div>
+                <div id="molotov" class="tool-icon col" title="Molotov">
+                    <i class="bi bi-fire"></i>
+                </div>
+                <div id="grenade" class="tool-icon col" title="Grenade">
+                    <i class="bi bi-brightness-high-fill"></i>
+                </div>
+                <div id="flash" class="tool-icon col" title="Flash">
+                    <i class="fas fa-eye-slash"></i>                
+                </div>
+                <div id="bomb" class="tool-icon col" title="Bomb">
+                    <i class="fas fa-bomb"></i>                
+                </div>
+
             </div>
         </div>
-        <div class="col-sm-4">
+
+        <div class="col-sm">
             <div>
                 <h2>{{strat.name}}</h2>
+                <div class="row">
+                    <div class="col-sm">
                 <div class="dropdown">
                     <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
@@ -97,6 +129,23 @@
                         <li><a class="dropdown-item" href="#">Kill Enemy Players</a></li>
                     </ul>
                 </div>
+            </div>
+            <div class="col-sm">
+
+                <div class="dropdown">
+                    <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Map
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% for map in maps %}
+                        <li><button class="dropdown-item map-dropdown" value="{{map.name}}" >{{map.name}}</button></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+            </div>
+        </div>
 
                 <div>
 
@@ -107,16 +156,15 @@
 
                         <div class="input-group">
                             <input type="text" name="stratName" id="stratName" placeholder="Strategy Name"
-                                class="form-control" value="{{strat.name}}">
+                                class="form-control stratInput" value="{{strat.name}}" readonly>
+                                <button class="btn btn-secondary edit-button">Edit</button>
                         </div>
                         <div class="input-group">
-                            <textarea name="description" class="form-control" aria-label="With textarea"
-                                placeholder="Description">{{strat.description}}</textarea>
+                            <textarea name="description" id="stratDesc" class="form-control stratInput" aria-label="With textarea"
+                                placeholder="Description" readonly>{{strat.description}}</textarea>
+                                <button class="btn btn-secondary edit-button">Edit</button>
                         </div>
-
-
                         <button type="submit" id="saveButton" class="btn btn-primary">Save Strategy</button>
-
                     </form>
 
                 </div>
