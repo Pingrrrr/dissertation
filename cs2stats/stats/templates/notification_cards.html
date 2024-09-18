@@ -1,0 +1,38 @@
+
+    <div class="card-body">
+        <div id="notifications">
+            {% if notifications %}
+            <ul class="list-group">
+                {% for notification in notifications %}
+                <li class="list-group-item bg-dark text-white">
+                    {{ notification.message }}
+                    <small class="timestamp">{{ notification.created_at }}</small>
+                    <p>{{notification.comment}}</p>
+                    <div class="float-start">
+                        {% if not notification.is_read %}
+                        <small>UNREAD</small>
+                        {% endif %}
+                    </div>
+                    <div class="float-end">
+                        <form method="post" action="/read_notification/" class="d-inline">
+                        {% csrf_token %}
+                        <input name="notification" value="{{notification.id}}" hidden readonly>
+                        <div class="btn-group" role="group">
+                            <a class="btn btn-primary" href="{% url 'round_view' notification.comment.post.round.id %}#comment-{{notification.comment.id}}">View Comment</a>
+                            {% if not notification.is_read %}
+                            <button class="btn btn-primary" type="submit" >Mark as Read</button>
+                            {% endif %}
+
+                        </div>
+                        </form>
+
+
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No notifications available.</p>
+            {% endif %}
+        </div>
+    </div>

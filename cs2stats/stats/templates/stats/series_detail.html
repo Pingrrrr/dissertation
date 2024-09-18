@@ -16,7 +16,7 @@
         {% for match in matches %}
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
             <div class="card player-card bg-dark text-light">
-                <img src="{% static 'default_image.jpg' %}" class="card-img-top" alt="{{ match.match.map }}"
+                <img src="{% static 'maps/' %}{{ match.match.map }}.png" class="card-img-top" alt="{{ match.match.map }}"
                     loading="lazy">
                 <div class="card-body text-center">
                     <h5 class="card-title">{{ match.match.map }} : {{ match.match.id }}</h5>

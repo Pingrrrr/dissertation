@@ -1,9 +1,10 @@
 
 <div class="list-group">
-<div id="comment-{{ reply.id }}" class="ml-4 list-group-item ">
+<div id="comment-{{ reply.id }}" class="ml-4 list-group-item bg-dark text-white">
     <strong id="comment-user">{{ reply.author.username }} replied</strong>
     <button class="btn btn-primary d-flex float-end reply-button" data-commentId="{{ reply.id }}">reply</button>
     <p id="comment-text">{{ reply.text }}</p>
+    <small class="timestamp">{{ reply.created_time }}</small>
     <small>
         {% if reply.tagged_players.all %}
             tagged: 

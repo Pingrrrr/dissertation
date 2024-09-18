@@ -36,6 +36,11 @@ urlpatterns = [
     path('demo/<int:uploaded_file_id>', views.demo, name='demo'),
     path('demos/<int:team_id>', views.demos, name='demos'),
 
+    path('notifications/', views.notifications, name='notifications'),
+    path('read_notifications/', views.read_notifications, name='read_notifications'),
+    path('read_notification/', views.read_notification, name='read_notification'),
+
+
 
    
 

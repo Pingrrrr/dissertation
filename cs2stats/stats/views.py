@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core import serializers
 from django.contrib import messages
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 import json
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -207,7 +207,7 @@ def round_view(request, round_id):
                 Notification.objects.create(
                     player=tagged_player,
                     message=f"You were tagged in a comment by {user.username} on Round {round.id}.",
-                    round=round
+                    comment=comment
                 )
             
             return redirect('round_view', round_id=round.id)
@@ -215,7 +215,7 @@ def round_view(request, round_id):
         form = CommentForm(team=team)
 
     
-    #comment_to_highlight = Comment.objects.filter(post=post, id=request.GET.get('comment_id')).first()
+   # comment_to_highlight = Comment.objects.filter(post=post, id=request.GET.get('comment_id')).first()
     kills = round.kills_set.all().order_by('tick')
     map = round.match_id.map
     mapUrl = f"maps/{map}.png"
@@ -263,11 +263,12 @@ def team_detail(request, team_id):
     #https://docs.djangoproject.com/en/dev/topics/db/queries/#complex-lookups-with-q-objects
     
 
-    series = Series.objects.filter(Q(team_a=team) | Q(team_b=team))
-
+    matches = Match.objects.filter(teams=team)
+    series_list = Series.objects.filter(matches__in=matches).distinct()
     return render(request, 'stats/team_detail.html', {
         'team': team,
-        'series': series
+        'matches': matches,
+        'series':series_list
     })
 
 
@@ -347,7 +348,7 @@ def team_comms(request, team_id):
         raise PermissionDenied("You are not authorized to view this team.")
 
     
-    notifications = player.notifications.all()[:5]  # Limit to 5 notifications
+    notifications = player.notifications.filter(is_read=False)
 
     form = DemoUploadForm()
     form.fields['series_id'].queryset = series
@@ -364,12 +365,14 @@ def team_comms(request, team_id):
             options={}
             if form.cleaned_data["series_id"]:
                 options['series_id']=form.cleaned_data["series_id"].id
-
+            else:
+                #create a new series
+                series = Series.objects.create()
+                options['series_id']=series.id
             if form.cleaned_data["link_team"]:
                 options['team_id']=team.id
 
             demo.options=options
-
             demo.status = 'pending'
             demo.save()
             return redirect('parsedemo', uploaded_file_id=demo.id)
@@ -407,14 +410,37 @@ def player_detail(request, player_id):
         
     })
 
-def view_notifications(request):
+def notifications(request):
     player = Player.objects.get(user=request.user)
-    player.notifications.filter(is_read=False).update(is_read=True)
+    unread_notifications = player.notifications.filter(is_read=False)
+    read_notifications = player.notifications.filter(is_read=True)
 
-    context = {
-        'notifications': player.notifications.all(),
-    }
-    return render(request, 'notifications.html', context)
+    return render(request, 'stats/notifications.html', {
+        'unread_notifications': unread_notifications,
+        'read_notifications': read_notifications,
+    })
+
+def read_notifications(request):
+
+    if request.POST:
+        for notification_id in request.POST.getlist('notifications'):
+            n = Notification.objects.get(id=notification_id)
+            n.is_read=True
+            n.save()
+
+    #https://stackoverflow.com/a/50687396 - go back to whatever called this 
+    return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+
+def read_notification(request):
+
+    if request.POST:
+        notification_id = request.POST.get('notification')
+        n = Notification.objects.get(id=notification_id)
+        n.is_read=True
+        n.save()
+            
+    #https://stackoverflow.com/a/50687396 - go back to whatever called this 
+    return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 
 def demo(request, uploaded_file_id):
     demoFile = UploadedDemoFile.objects.get(id=uploaded_file_id)

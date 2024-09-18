@@ -4,57 +4,59 @@
 <div id="comments" class="list-group mt-4 ml-8 bg-dark text-light rounded p-3">
     {% if comments %}
     {% for comment in comments %}
-    <div class="list-group-item">
-        
-        <div id="comment-{{ comment.id }}" 
-            class="list-group-item ">
-            <strong id="comment-user">{{ comment.author.username }}</strong>
-            <div class="float-end"><button class="btn btn-primary d-flex float-end reply-button" data-commentId="{{ comment.id }}">reply</button></div>
+
+        <div id="comment-{{ comment.id }}" class="list-group-item bg-dark text-white">
+            <strong id="comment-user">{{ comment.author.username }}</strong> 
+            <div class="float-end"><button class="btn btn-primary d-flex float-end reply-button"
+                    data-commentId="{{ comment.id }}">reply</button></div>
             <p id="comment-text">{{ comment.text }}</p>
+            <small class="timestamp">{{ comment.created_time }}</small>
             <small>
+                
                 {% if comment.tagged_players.all %}
-                tagged: 
-                    {% for player in comment.tagged_players.all %}
-                        [{{ player }}] 
-                    {% endfor %}
+                tagged:
+                {% for player in comment.tagged_players.all %}
+                [{{ player }}]
+                {% endfor %}
                 {% endif %}
             </small>
-            
-            
+
+
         </div>
-        <div class="list-group-item">
-        {% for reply in comment.replies.all %}
+        {% if comment.replies.all %}
+        <div class="list-group-item bg-dark text-white">
+            {% for reply in comment.replies.all %}
             {% include 'replies.html' with reply=reply %}
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-    </div>
     {% endfor %}
-        
 
-        
+
+
     {% else %}
     <p class="text-center">No comments yet.</p>
     {% endif %}
-    </div>
+</div>
 
-    <section class="form-section">
-        <h4>Add a Comment</h4>
-        <div id="reply-div" hidden>
-        <h5>Replying to: </h5> 
-        <div  class="list-group my-3" >
+<section class="form-section">
+    <h4>Add a Comment</h4>
+    <div id="reply-div" hidden>
+        <h5>Replying to: </h5>
+        <div class="list-group my-3">
             <div class="list-group-item">
                 <strong id="reply-sample-user"></strong>
                 <p id="reply-sample"></p>
             </div>
         </div>
     </div>
-        
-        <form id="comment-form" method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button id="comment-button" type="submit" class="btn btn-primary">Add Comment</button>
-        </form>
-    </section>
 
-    <script src="{% static 'comments.js' %}"></script>
+    <form id="comment-form" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button id="comment-button" type="submit" class="btn btn-primary">Add Comment</button>
+    </form>
+</section>
+
+<script src="{% static 'comments.js' %}"></script>

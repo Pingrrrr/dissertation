@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Strategies {% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="card my-4 bg-dark text-white">
+        <div class="card-header">
+            Unread Notifications
+            {% if notifications %}
+            <div class="float-end">
+                <form method="post" action="/read_notifications/" class="d-inline">
+                    {% csrf_token %}
+                    <select name="notifications" id="notifications" multiple hidden>
+                        {% for notification in notifications %}
+                        <option value="{{notification.id}}" selected>{{notification.id}}</option>
+                        {% endfor %}
+                      </select>
+                    <button type="submit" class="btn btn-sm btn-success mark-all-as-read-btn">Mark All as Read</button>
+                    
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        {% include 'notification_cards.html' with notifications=unread_notifications %}
+        
+
+    </div>
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            Read Notifications
+        </div>
+
+        {% include 'notification_cards.html' with notifications=read_notifications %}
+        
+
+    </div>
+
+</div>
+
+{% endblock %}

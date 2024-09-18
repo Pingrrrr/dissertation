@@ -23,9 +23,9 @@
     </section>
     <ul id="killFeed" class="list-group">
         {% for kill in kills %}
-        <button class="list-group-item list-group-item-action timestampComment" id="{{kill.tick}}">
+        <button class="list-group-item list-group-item-action timestampComment bg-dark text-white" id="{{kill.tick}}">
 
-            {{kill.round_time}} : {{kill.attacker_ID}}
+            <strong>{{kill.round_time}}</strong> : {{kill.attacker_ID}}
             {% if kill.assister_ID %}
             + {{kill.assister_ID}}
             {% endif %}

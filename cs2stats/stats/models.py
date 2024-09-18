@@ -83,7 +83,7 @@ class Round(models.Model):
     t_endEquipmentValue = models.IntegerField(default=0)
     ct_endEquipmentValue = models.IntegerField(default=0)
     ticks = models.JSONField(null=True)
-    post = models.ForeignKey(Post, null=True, on_delete=models.SET_NULL)
+    post = models.OneToOneField(Post, null=True, on_delete=models.SET_NULL)
     
     def __str__(self):
         return f"{self.id}"
@@ -235,7 +235,6 @@ class SeriesReviewComment(models.Model):
         return f"{self.series_review_id}"
     
 
-    
 class Notification(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='notifications')
     message = models.CharField(max_length=255)
