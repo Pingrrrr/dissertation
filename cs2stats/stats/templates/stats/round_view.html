@@ -16,19 +16,22 @@
     <section id="user-info" class="mt-4 bg-dark text-light rounded p-3">
         
 
-        <div class="row align-items-start">
-            <div class="col-sm align-items-center">
+        <div class="row align-items-top">
+            <div class="col-sm align-items-center" width="800">
                 <div class="bgimg" width="800" height="800">
-                    <div id="">
+                    <div id="map-container" width="800" height="800">
+                        <svg id="minimap" class="minimap" width="800" height="800"></svg>
+                        <canvas id="map-canvas" width="800" height="800"></canvas>
 
                     </div>
-                    <svg id="minimap" class="minimap" width="800" height="800"></svg>
-                    <canvas id="map-canvas" width="800" height="800"></canvas>
+
 
                 </div>
-                <div class="container">
-                    <button id="playButton" class="btn btn-primary float-start">Pause</button>
-                    <input id="progressBar" class="float-end" type="range" value="0" min="0" max="100">
+                <div class="row align-items-center">
+                    <div class="col-sm"><button id="playButton" class="btn btn-primary float-start">Pause</button></div>
+                    
+                   <div class="col-sm"> <input id="progressBar"  type="range" value="0" min="0" max="100"></div>
+                   <div class="col-sm"></div>
                 </div>
             </div>
             <div class="col-sm mt-4">
@@ -99,7 +102,7 @@
 </script>
 
 <script src="{% static 'fabric.js' %}"></script>
-<script src="{% static 'loadMap.js' %}"></script>
+<script src="{% static 'fabricUtils.js' %}"></script>
 <script src="{% static 'minimap.js' %}"></script>
 
 
@@ -139,7 +142,31 @@
         border-radius: 0.25rem;
     }
 
+    #map-container {
+      position: relative;
+      width: 800px;
+      height: 800px;
+    }
 
+    /* to get the d3 animations to play over fabric canvas, had to set absolute positions with z +1 for svg elements*/
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1; /* SVG below canvas */
+    }
+
+    /* Position the Fabric.js canvas on top of SVG */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0; /* Canvas above SVG */
+    }
 
     
 

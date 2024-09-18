@@ -74,8 +74,6 @@ mapDropdown.forEach(button => {
 
 });
 
-
-
 function saveStrategyForm(event) {
     event.preventDefault();
 
@@ -223,17 +221,10 @@ var rect = new fabric.Rect({
     erasable: false
 })
 
-fetch('./canvas', {
-    method: 'GET'
-})
-    .then(response => {
-        return response.json();
-    })
-    .then(json => {
-        console.log(json)
-        canvas.loadFromJSON(json);
-    })
 
-canvas.add(rect)
-rect.bringToFront();
-
+loadStrategy(canvas,'./canvas', e=>{
+    //canvas.setBackgroundImage(null);
+    //canvas.setBackgroundColor('');
+    //loadMap(canvas, map);
+    canvas.renderAll.bind(canvas);
+} );

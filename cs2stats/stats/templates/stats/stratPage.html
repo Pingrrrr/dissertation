@@ -115,7 +115,11 @@
             <div>
                 <h2>{{strat.name}}</h2>
                 <div class="row">
+                    <!--A nice idea to implement if more time - put some goal to be met on rounds that use this strategy
+                    
                     <div class="col-sm">
+                 
+                        
                 <div class="dropdown">
                     <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
@@ -129,7 +133,7 @@
                         <li><a class="dropdown-item" href="#">Kill Enemy Players</a></li>
                     </ul>
                 </div>
-            </div>
+            </div>-->
             <div class="col-sm">
 
                 <div class="dropdown">
@@ -161,7 +165,7 @@
                         </div>
                         <div class="input-group">
                             <textarea name="description" id="stratDesc" class="form-control stratInput" aria-label="With textarea"
-                                placeholder="Description" readonly>{{strat.description}}</textarea>
+                                placeholder="Description" rows="20" readonly>{{strat.description}}</textarea>
                                 <button class="btn btn-secondary edit-button">Edit</button>
                         </div>
                         <button type="submit" id="saveButton" class="btn btn-primary">Save Strategy</button>
@@ -177,6 +181,7 @@
     var csrftoken = '{{ csrf_token }}';
 
 </script>
+<script src="{% static 'fabricUtils.js' %}"></script>
 <script src="{% static 'strategyPlanner.js' %}"></script>
 
 

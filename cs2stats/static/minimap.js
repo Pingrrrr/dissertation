@@ -1,3 +1,5 @@
+const canvas = new fabric.Canvas('map-canvas', { preserveObjectStacking: true });
+
 var players = [];
 var gameUpdates = [];
 
@@ -86,66 +88,22 @@ grenadeColours.set('incendiary_grenade','orange');
 
 
 
-
-console.log('Round ID ' + round_id);
-
-
-
-function loadStrategy(canvas, url){
-    fetch(url, {
-        method: 'GET'
-    })
-        .then(response => {
-            return response.json();
-        })
-        .then(json => {
-            console.log(json)
-            canvas.loadFromJSON(json);
-            canvas.setBackgroundImage(null);
-            canvas.setBackgroundColor('');
-            ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, 800, 800);
-
-            canvas.renderAll();
-        });
-};
-
-
+loadMap(canvas, map);
 stratButtons = document.querySelectorAll('.strategy-btn');
-var canvas = new fabric.Canvas('map-canvas', { preserveObjectStacking: true });
+
 stratButtons.forEach(button => {
     button.addEventListener('click', function (event) {
 
         var url = '/strategy/'+this.value+'/canvas'
-        loadStrategy(canvas, url);
-
-
+        loadStrategy(canvas, url, e=>{
+            canvas.setBackgroundImage(null);
+            canvas.setBackgroundColor('');
+            loadMap(canvas, map);
+            canvas.renderAll.bind(canvas);
+        });
 
     });
 });
-
-var currentMap = "de_dust2"
-var currentMapImg;
-
-function setMap(canvas, oImg) {
-    if (currentMapImg) {
-        canvas.remove(currentMapImg);
-    }
-    oImg.set('selectable', false).set('erasable', false);
-    oImg.scaleToHeight(800);
-    oImg.scaleToWidth(800);
-    canvas.setBackgroundImage(oImg, canvas.renderAll.bind(canvas));
-    currentMapImg = oImg;
-}
-
-function loadMap(canvas, mapName) {
-
-    fabric.Image.fromURL(`/static/maps/${mapName}.png`, function (oImg) {
-        setMap(canvas, oImg)
-    });
-    currentMap = mapName;
-}
-loadMap(canvas, 'maps/'+map)
 
 
 d3.json("../ticks/" + round_id)
@@ -311,6 +269,7 @@ d3.json("../ticks/" + round_id)
             }
         }
 
+        loadMap(canvas, map)
         playing=true
         animateUpdates(0);
 
