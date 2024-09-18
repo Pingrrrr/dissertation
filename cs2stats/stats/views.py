@@ -22,6 +22,19 @@ from django.contrib.auth.decorators import login_required
 
 demoParseTasks = {}
 
+round_end_reasons = {
+        '1': "Bomb detonation",
+        '7': "Bomb defused",
+        '8': "T Elimination",
+        '9': "CT Elimination",
+        '12': "TimeOut",
+        'bomb_exploded': "Bomb detonation",
+        'bomb_defused': "Bomb defused",
+        't_killed': "T Elimination",
+        'ct_killed': "CT Elimination",
+        'time_ran_out': "TimeOut",
+    }
+
 def index(request):
     teams = Team.objects.all()
     return render(request, 'stats/index.html', {'teams': teams})
@@ -187,6 +200,11 @@ def round_view(request, round_id):
 
     
     round = get_object_or_404(Round, id=round_id)
+    rounds = Round.objects.filter(match_id=round.match_id).order_by('round_num')
+    first_round = rounds.first()
+    last_round = rounds.last()
+
+
     post = round.post
     if not post:
         post = Post.objects.create(title=f"{round.match_id} - {round.match_id.map} : Round {round.round_num} Review")
@@ -220,6 +238,7 @@ def round_view(request, round_id):
     map = round.match_id.map
     mapUrl = f"maps/{map}.png"
     comments = post.comments.filter(parent__isnull=True)
+    strategies = Strategy.objects.filter(Q(creator=player) or Q(creator__in=team.players))
     #comments = post.comment_set.all()
 
 
@@ -231,6 +250,9 @@ def round_view(request, round_id):
         'round': round,
         'form': form,
         'kills':kills,
+        'rounds':rounds,
+        'round_end_reasons':round_end_reasons,
+        'strategies':strategies
     })
 
 
@@ -304,6 +326,10 @@ def match_detail(request, match_id):
     team_a_stats = match.stat_set.filter(player__in=team_a_players).order_by('-adr')
     team_b_stats = match.stat_set.filter(player__in=team_b_players).order_by('-adr')
 
+    team_a_wins = match.round_set.filter(winningTeam=match.team_a_lineup).count()
+    team_b_wins = match.round_set.filter(winningTeam=match.team_b_lineup).count()
+    winner = match.team_a_lineup if team_a_wins > team_b_wins else match.team_b_lineup
+
     round_end_reasons = {
         '1': "Bomb detonation",
         '7': "Bomb defused",
@@ -325,6 +351,9 @@ def match_detail(request, match_id):
         'team_a_stats': team_a_stats.filter(side='ALL'),
         'team_b_stats': team_b_stats.filter(side='ALL'),
         'round_end_reasons': round_end_reasons,
+        'team_a_wins':team_a_wins,
+        'team_b_wins':team_b_wins,
+        'winner':winner,
         'related_demos': related_demos,  
     }
     
@@ -468,3 +497,5 @@ def parsedemo(request, uploaded_file_id, series_id=None):
 
     return redirect('demo', uploaded_file_id=demoFile.id)
 
+def sunburst(request):
+    return render(request ,'stats/sunburst.html')

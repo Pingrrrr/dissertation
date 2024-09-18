@@ -1,0 +1,63 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunburst Pie Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .sunburst text {
+            font-size: 12px;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sunburst Pie Chart</h1>
+<div id="chart"></div>
+
+<script src="{% static 'sunburst.js' %}"></script>
+<script>
+// Example hierarchical data for the sunburst chart
+const data = {
+    "name": "bomb plants",
+    "children": [
+        {
+            "name": "A site",
+            "children": [
+                { "name": "Detonated", "size": 23 },
+                { "name": "Defused", "size": 56 }
+            ]
+        },
+        {
+            "name": "B site",
+            "children": [
+                { "name": "Detonated", "size": 11 },
+                { "name": "Defused", "size": 9 }
+            ]
+        }
+    ]
+};
+
+svgChart = chart = Sunburst(data, {
+  value: d => d.size, // size of each node (file); null for internal nodes (folders)
+  label: d => d.name + (d.size==null ? "":" ("+d.size+")"), // display name for each cell
+  width: 400,
+  height: 400,
+  color: ["blue","red"]
+  
+});
+
+document.getElementById("chart").appendChild(svgChart);
+
+
+
+</script>
+</body>
+</html>

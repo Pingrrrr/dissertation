@@ -1,9 +1,5 @@
 #https://stackoverflow.com/a/24456404
-import datetime
 import hashlib
-import json
-import traceback
-import MySQLdb
 import os, django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "cs2stats.settings")
 django.setup()
@@ -307,10 +303,19 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
             
             if attacker:
                 k.attacker_ID = attacker
+                k.attackerX = kill['attacker_X']
+                k.attackerY = kill['attacker_Y']
+                k.attackerZ = kill['attacker_Z']
             if assister:
                 k.assister_ID = assister
+                k.assisterX = kill['assister_X']
+                k.assisterY = kill['assister_Y']
+                k.assisterZ = kill['assister_Z']
             if victim:
                 k.victim_ID = victim
+                k.victimX = kill['victim_X']
+                k.victimY = kill['victim_Y']
+                k.victimZ = kill['victim_Z']
             
             k.save()
             
@@ -374,6 +379,7 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
 
         
         total_kills = 0
+        total_assists = 0
         total_deaths = 0
         total_damage = 0
         rounds_played = len(dem.rounds)
@@ -384,6 +390,9 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
                 
                 side_kills = len(dem.kills[(dem.kills['attacker_steamid'] == steam_id) & (dem.kills['attacker_team_name'] == side)])
                 total_kills += side_kills
+
+                side_assists = len(dem.kills[(dem.kills['assister_steamid'] == steam_id) & (dem.kills['assister_team_name'] == side)])
+                total_assists += side_assists
 
                 side_deaths = len(dem.kills[(dem.kills['victim_steamid'] == steam_id) & (dem.kills['victim_team_name'] == side)])
                 total_deaths += side_deaths
@@ -419,6 +428,7 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
                         'kd_ratio': kd_ratio,
                         'headshot_percentage': headshot_percentage,
                         'total_kills': side_kills,
+                        'total_assists':side_assists,
                         'total_deaths': side_deaths,
                         'damage_per_round': damage_per_round,
                         'rounds_played': side_rounds,
@@ -455,6 +465,7 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
                     'kd_ratio': kd_ratio,
                     'headshot_percentage': headshot_percentage,
                     'total_kills': total_kills,
+                    'total_assists':total_assists,
                     'total_deaths': total_deaths,
                     'damage_per_round': damage_per_round,
                     'rounds_played': rounds_played,

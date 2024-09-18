@@ -1,7 +1,7 @@
 //https://stackoverflow.com/a/40030387
 var canvas = new fabric.Canvas('map-canvas', { preserveObjectStacking: true });
 mapDropdown = document.querySelectorAll('.map-dropdown');
-let currentMap = "de_dust2"
+
 const saveButton = document.getElementById('saveButton');
 editButtons = document.querySelectorAll('.edit-button');
 currentColour = "black"
@@ -44,6 +44,7 @@ colourButtons.forEach(button => {
 })
 
 
+var currentMap = "de_dust2"
 var currentMapImg;
 function setMap(oImg) {
     if (currentMapImg) {

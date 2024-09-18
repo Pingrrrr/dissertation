@@ -19,11 +19,12 @@
                 <img src="{% static 'maps/' %}{{ match.match.map }}.png" class="card-img-top" alt="{{ match.match.map }}"
                     loading="lazy">
                 <div class="card-body text-center">
-                    <h5 class="card-title">{{ match.match.map }} : {{ match.match.id }}</h5>
+                    <h5 class="card-title">{{ match.match.map }}</h5>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item bg-dark text-light">{{ match.match.team_a_lineup.clanName }}: {{ match.team_a_wins }}
+                        
+                        <li class="list-group-item bg-dark text-light">{{ match.match.team_a_lineup.clanName }} ({{ match.team_a_wins }})
                         </li>
-                        <li class="list-group-item bg-dark text-light">{{ match.match.team_b_lineup.clanName }}: {{ match.team_b_wins }}
+                        <li class="list-group-item bg-dark text-light">{{ match.match.team_b_lineup.clanName }} ({{ match.team_b_wins }})
                         </li>
                     </ul>
                     <a href="{% url 'match_detail' match.match.id %}" class="btn btn-primary mt-3">View Details</a>

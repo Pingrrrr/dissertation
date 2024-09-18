@@ -10,55 +10,101 @@
     <div class="row">
         <div class="col text-center">
             <h2>{{ match.team_a_lineup.clanName }} vs {{ match.team_b_lineup.clanName }}</h2>
+            <strong><h3 class="winner-text" style="color:rgb(86, 255, 86)">{{winner.clanName}}</h3></strong>
             <h4>{{ match.map }}</h4>
         </div>
     </div>
 
-    <!-- Team A Player Stats -->
     <div class="row mt-4">
-        <div class="col-12">
-            <h5 class="text-center">{{ match.team_a_lineup.clanName }} Player Stats</h5>
-            <div class="card-group">
-                {% for stat in team_a_stats %}
-                <div class="card">
-                    <img src="{% static stat.player.image_url %}" class="card-img-top"
-                        alt="Profile image of {{ stat.player.nick_name }}">
-                    <div class="card-body">
-                        <h5 class="card-title text-center">{{ stat.player.nick_name }}</h5>
-                        <p class="card-text">Rating: {{ stat.rating|floatformat:2 }}</p>
-                        <p class="card-text">ADR: {{ stat.adr|floatformat:2 }}</p>
-                        <p class="card-text">KAST: {{ stat.kast|floatformat:2 }}</p>
-                    </div>
-                    <a href="{% url 'player_detail' stat.player.steam_id %}"
-                        class="btn btn-primary btn-sm mt-2 w-100">View Details</a>
-                </div>
-                {% endfor %}
-            </div>
+        <div class="col-sm">
+            <h5 class="text-center">{{match.team_a_lineup.clanName}}</h5>
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Kills</th>
+                        <th>Assists</th>
+                        <th>Deaths</th>
+                        <th>Rating</th>
+                        <th>ADR</th>
+                        <th>KAST</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in team_a_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'player_detail' stat.player.steam_id %}" 
+                            class="btn btn-primary btn-sm">{{ stat.player.nick_name }}</a>
+                        </td>
+                        <td>{{ stat.total_kills }}</td>
+                        <td>{{ stat.total_assists }}</td>
+                        <td>{{ stat.total_deaths }}</td>
+                        <td>{{ stat.rating|floatformat:2 }}</td>
+                        <td>{{ stat.adr|floatformat:2 }}</td>
+                        <td>{{ stat.kast|floatformat:2 }}</td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm">
+            <h5 class="text-center">{{match.team_b_lineup.clanName}}</h5>
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Kills</th>
+                        <th>Assists</th>
+                        <th>Deaths</th>
+                        <th>Rating</th>
+                        <th>ADR</th>
+                        <th>KAST</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in team_b_stats %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'player_detail' stat.player.steam_id %}" 
+                            class="btn btn-primary btn-sm">{{ stat.player.nick_name }}</a>
+                        </td>
+                        <td>{{ stat.total_kills }}</td>
+                        <td>{{ stat.total_assists }}</td>
+                        <td>{{ stat.total_deaths }}</td>
+                        <td>{{ stat.rating|floatformat:2 }}</td>
+                        <td>{{ stat.adr|floatformat:2 }}</td>
+                        <td>{{ stat.kast|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Team B Player Stats -->
+    <!-- bomb plants pie chart - plant location, defuses, by team-->
     <div class="row mt-4">
-        <div class="col-12">
-            <h5 class="text-center">{{ match.team_a_lineup.clanName }} Player Stats</h5>
-            <div class="card-group">
-                {% for stat in team_b_stats %}
-                <div class="card">
-                    <img src="{% static stat.player.image_url %}" class="card-img-top"
-                        alt="Profile image of {{ stat.player.nick_name }}">
-                    <div class="card-body">
-                        <h5 class="card-title text-center">{{ stat.player.nick_name }}</h5>
-                        <p class="card-text">Rating: {{ stat.rating|floatformat:2 }}</p>
-                        <p class="card-text">ADR: {{ stat.adr|floatformat:2 }}</p>
-                        <p class="card-text">KAST: {{ stat.kast|floatformat:2 }}</p>
-                    </div>
-                    <a href="{% url 'player_detail' stat.player.steam_id %}"
-                        class="btn btn-primary btn-sm mt-2 w-100">View Details</a>
-                </div>
-                {% endfor %}
-            </div>
+        <div class="col-sm">
+            <div id="bombplants"></div>
+        </div>
+        <div class="col-sm">
+            <div id="rounds"></div>
+        </div>
+        <div class="col-sm">
+            <div id="kills"></div>
         </div>
     </div>
+
+    <!-- team synergy-->
+    <!-- player assist/trading diagram, highlighting lone wolves and team players-->
+
+
+    <!-- most popular weapons bought, mapped against value, by team-->
+
+    
+
+    <!-- heatmaps kills, deaths, assists-->
 
     <!-- Rounds Table -->
     <div class="row mt-4">
@@ -89,4 +135,8 @@
             </table>
         </div>
     </div>
+
+    <script src=" https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js "></script>
+    <script src="{% static 'sunburst.js' %}"></script>
+    <script src="{% static 'matchStats.js' %}"></script>
 {% endblock %}

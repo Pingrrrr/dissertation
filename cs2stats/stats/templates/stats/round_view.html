@@ -10,31 +10,81 @@
 
 
 <div class="container mt-4">
+
+    <a class="btn btn-primary" href="/match/{{round.match_id.id}}">Back to Match</a>
+    
     <section id="user-info" class="mt-4 bg-dark text-light rounded p-3">
-        <div class="bgimg" width="600" height="600">
-            <svg id="minimap" class="minimap" width="600" height="600">
-            </svg>
+        
+
+        <div class="row align-items-start">
+            <div class="col-sm align-items-center">
+                <div class="bgimg" width="800" height="800">
+                    <div id="">
+
+                    </div>
+                    <svg id="minimap" class="minimap" width="800" height="800"></svg>
+                    <canvas id="map-canvas" width="800" height="800"></canvas>
+
+                </div>
+                <div class="container">
+                    <button id="playButton" class="btn btn-primary float-start">Pause</button>
+                    <input id="progressBar" class="float-end" type="range" value="0" min="0" max="100">
+                </div>
+            </div>
+            <div class="col-sm mt-4">
+                <div class="row">
+                    <div class="col">
+                        {% if round.id > rounds.first.id %}
+                        <a class="btn btn-primary float-start" href="/round/{{round.id|add:-1}}">Prev Round</a>
+                        {%endif %}
+                    </div>
+        
+                    <div class="col">
+                    {% if round.id < rounds.last.id %} <a class="btn btn-primary float-end" href="/round/{{round.id|add:1}}">
+                        Next Round</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col text-center">
+                        <h2>Round {{ round.round_num }} won by {{ round.winningTeam.clanName }}</h2>
+                        <h4>{{ round.roundEndReason }}</h4>
+                    </div>
+                </div>
+
+                <ul id="killFeed" class="list-group">
+                    {% for kill in kills %}
+                    <button class="list-group-item list-group-item-action timestampComment bg-dark text-white" id="{{kill.tick}}">
+            
+                        <strong>{{kill.round_time}}</strong> : {{kill.attacker_ID}}
+                        {% if kill.assister_ID %}
+                        + {{kill.assister_ID}}
+                        {% endif %}
+                        killed {{kill.victim_ID}} with {{kill.weapon}}
+            
+                    </button>
+                    {% endfor %}
+                </ul>
+
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Overlay Strategy
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for strat in strategies %}
+                      <li><button class="dropdown-item strategy-btn" value="{{strat.id}}">{{strat.name}}</button></li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+            
+            </div>
         </div>
-        <div class="container">
-            <button id="playButton" class="btn btn-primary">Pause</button>
-            <input id="progressBar" type="range" value="0" min="0" max="100">
-        </div>
+
 
     </section>
-    <ul id="killFeed" class="list-group">
-        {% for kill in kills %}
-        <button class="list-group-item list-group-item-action timestampComment bg-dark text-white" id="{{kill.tick}}">
-
-            <strong>{{kill.round_time}}</strong> : {{kill.attacker_ID}}
-            {% if kill.assister_ID %}
-            + {{kill.assister_ID}}
-            {% endif %}
-            killed {{kill.victim_ID}} with {{kill.weapon}}
-
-        </button>
-        {% endfor %}
-    </ul>
 </div>
+
 
 
 <div class="container mt-4">
@@ -48,6 +98,8 @@
     var map = '{{map}}';
 </script>
 
+<script src="{% static 'fabric.js' %}"></script>
+<script src="{% static 'loadMap.js' %}"></script>
 <script src="{% static 'minimap.js' %}"></script>
 
 
@@ -86,5 +138,12 @@
     .form-control {
         border-radius: 0.25rem;
     }
+
+
+
+    
+
+
+    
 </style>
 {% endblock %}

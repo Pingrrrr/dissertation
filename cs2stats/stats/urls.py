@@ -41,6 +41,8 @@ urlpatterns = [
     path('read_notification/', views.read_notification, name='read_notification'),
 
 
+    path('sunburst/', views.sunburst, name='sunburst'),
+
 
    
 
