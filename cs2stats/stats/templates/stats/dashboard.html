@@ -23,33 +23,13 @@
 
     <section id="recent-series" class="mt-4 bg-dark text-light rounded p-3">
         <h2>Recent Series</h2>
-        <ul class="list-group list-group-flush">
-            {% for series in recent_series %}
-            <li class="list-group-item bg-dark text-light">
-                <a href="{% url 'series_detail' series.id %}" class="text-light">
-                    <strong>{{ series.title }}</strong>
-                </a>
-                <p>
-                    Winner:
-                    {% if series.winning_team %}
-                    {{ series.winning_team.name }}
-                    {% else %}
-                    TBD
-                    {% endif %}
-                </p>
-                <p>Best of: {{ series.best_of }}</p>
-                <ul>
-                    {% for match in series.matches.all %}
-                    <li>
-                        {{ match.date }} - Map: {{ match.map }}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </li>
-            {% empty %}
-            <li class="list-group-item bg-dark text-light">No recent series found.</li>
-            {% endfor %}
-        </ul>
+        {% include 'series_cards.html' with series=series %}
     </section>
+
+    
+
+
+
+    
 </div>
 {% endblock %}

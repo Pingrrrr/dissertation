@@ -34,6 +34,24 @@ round_end_reasons = {
         'time_ran_out': "TimeOut",
     }
 
+def getSeriesDetails(series_id):
+    series = get_object_or_404(Series, id=series_id)
+    
+    matches = []
+
+    for match in series.matches.all():
+        team_a_wins = match.round_set.filter(winningTeam=match.team_a_lineup).count()
+        team_b_wins = match.round_set.filter(winningTeam=match.team_b_lineup).count()
+        winner = match.team_a_lineup if team_a_wins > team_b_wins else match.team_b_lineup
+        matches.append({
+            'match': match,
+            'team_a_wins': team_a_wins,
+            'team_b_wins': team_b_wins,
+            'winner': winner
+        })
+
+    return matches
+
 def index(request):
     teams = Team.objects.all()
     return render(request, 'stats/index.html', {'teams': teams})
@@ -88,12 +106,21 @@ def dashboard(request):
     teams = Team.objects.filter(players=player)
 
     
-    recent_series = Series.objects.prefetch_related('matches').order_by('-id')[:10]
+    recent_series = Series.objects.prefetch_related('matches').order_by('-id')[:5]
+
+    series = []
+    for s in recent_series:
+        m = getSeriesDetails(s.id)
+        series.append({
+            'series':s,
+            'matches':m
+        })
     
     context = {
         'user': request.user,
         'teams': teams,
         'recent_series': recent_series,
+        'series':series
     }
 
     return render(request, 'stats/dashboard.html', context)
@@ -302,23 +329,7 @@ def team_detail(request, team_id):
         'series':series
     })
 
-def getSeriesDetails(series_id):
-    series = get_object_or_404(Series, id=series_id)
-    
-    matches = []
 
-    for match in series.matches.all():
-        team_a_wins = match.round_set.filter(winningTeam=match.team_a_lineup).count()
-        team_b_wins = match.round_set.filter(winningTeam=match.team_b_lineup).count()
-        winner = match.team_a_lineup if team_a_wins > team_b_wins else match.team_b_lineup
-        matches.append({
-            'match': match,
-            'team_a_wins': team_a_wins,
-            'team_b_wins': team_b_wins,
-            'winner': winner
-        })
-
-    return matches
 
 
 def series_detail(request, series_id):

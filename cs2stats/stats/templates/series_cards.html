@@ -1,0 +1,39 @@
+{% load static %}
+
+
+<div class="row-cols-8 justify-content-center">
+    <div class="card-group justify-content-center">
+    {% for s in series%}
+
+    <div class="col-5 col-md-3 col-lg-2 mb-3 text-center">
+        <div class="card  mx-1 my-1 h-100">
+            <div class="card-header">
+                <a href="{% url 'series_detail' s.series.id %}" style="text-decoration-color:orange; color:white;">
+                <h5 class="card-title">{{ s.series.title|truncatechars:30 }}</h5>
+            </a>
+
+            </div>
+
+            <div class="card-body text-center">
+                
+                
+                <ul class="list-group list-group-flush">
+                    {% for match in s.matches %}
+                    
+                    <a href="{% url 'match_detail' match.match.id %}" style="text-decoration-color:orange; color:white;">
+                    <li class="list-group-item bg-dark text-light">
+                        {{ match.match.team_a_lineup.clanName }} ({{ match.team_a_wins }}) <br> {{ match.match.team_b_lineup.clanName }} ({{ match.team_b_wins }})
+                    </li>
+                </a>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+
+    {% endfor %}
+</div>
+</div>
+
+

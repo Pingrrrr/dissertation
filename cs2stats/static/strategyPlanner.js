@@ -44,7 +44,7 @@ colourButtons.forEach(button => {
 })
 
 
-var currentMap = "de_dust2"
+var currentMap = "de_dust2" //start with this as default
 var currentMapImg;
 function setMap(oImg) {
     if (currentMapImg) {
@@ -64,6 +64,8 @@ function loadMap(mapName) {
     });
     currentMap = mapName;
 }
+
+loadMap(currentMap) //to ensure something is loaded
 
 mapDropdown.forEach(button => {
     button.addEventListener('click', function (event) {
