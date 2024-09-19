@@ -13,7 +13,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy,UploadedDemoFile
-from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
+from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm, EditSeriesForm
 from .decorators import unauthenticated_user, allowed_users
 from .demo import *
 
@@ -331,6 +331,31 @@ def series_detail(request, series_id):
         'matches': matches,
     })
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['Player', 'Coach'])
+def series_edit(request, series_id):
+    
+    series = get_object_or_404(Series, id=series_id)
+    matches=getSeriesDetails(series_id)
+    form = EditSeriesForm(instance=series, series=series)
+    if request.POST:
+        form = EditSeriesForm(request.POST, instance=series, series=series)
+        if form.is_valid():
+            series = form.save(commit=False)
+            if form.cleaned_data['matchesToAdd']:
+                series.matches.add(form.cleaned_data['matchesToAdd'])
+            if form.cleaned_data['matchesToRemove']:
+                series.matches.remove(form.cleaned_data['matchesToRemove'])
+
+            series.save()
+            return redirect('series_edit', series_id)
+
+    return render(request, 'stats/series_edit.html', {
+        'series': series,
+        'matches': matches,
+        'form':form
+    })
+
 def match_detail(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     
@@ -361,18 +386,20 @@ def match_detail(request, match_id):
     return render(request, 'stats/match_detail.html', context)
 
 def match_kills(request, match_id):
-    match = Match.objects.get(id=match_id)
-
     a_kills = Kills.objects.filter(round_ID__match_id=match_id).values(
         'round_ID__match_id__team_a_lineup__clanName',
         'attackerSide'
     ).annotate(kills=Count('id'))
+
+    print(a_kills)
 
     
     b_kills = Kills.objects.filter(round_ID__match_id=match_id).values(
         'round_ID__match_id__team_b_lineup__clanName',
         'attackerSide'
     ).annotate(kills=Count('id'))
+
+    print(b_kills)
 
     json = {}
 
@@ -450,7 +477,7 @@ def team_comms(request, team_id):
                 options['series_id']=form.cleaned_data["series_id"].id
             else:
                 #create a new series
-                series = Series.objects.create()
+                series = Series.objects.create(creator=request.user)
                 options['series_id']=series.id
             if form.cleaned_data["link_team"]:
                 options['team_id']=team.id
@@ -459,6 +486,7 @@ def team_comms(request, team_id):
             demo.status = 'pending'
             demo.save()
             return redirect('parsedemo', uploaded_file_id=demo.id)
+        
         print(f"form isnt valid: {form.errors}")
         return JsonResponse({'error': 'Something went wrong'}, status=400)
 
@@ -564,7 +592,7 @@ def demo(request, uploaded_file_id):
 
 def demos(request, team_id):
     team = get_object_or_404(Team, id=team_id)
-    uploaded_demos = UploadedDemoFile.objects.filter(Q(uploaded_by=request.user) or Q(uploaded_by__in=team.players))
+    uploaded_demos = UploadedDemoFile.objects.filter(Q(uploaded_by=request.user) or Q(uploaded_by__in=team.players)).order_by('-uploaded_at')
     return render(request, 'stats/demos.html', {'uploaded_demos': uploaded_demos})
 
 

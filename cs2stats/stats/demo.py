@@ -263,6 +263,8 @@ def parseMatchFromDemo(dem, uploadedDemo,  tickRate, options):
 
 
         r=Round(match_id=match, round_num=round['round'], isWarmup=False, winningSide=round['winner'], winningTeam=winner, roundEndReason=round['reason'], ticks=playerPos)
+        r.ct_side=ctTeam
+        r.t_side=tTeam
         r.save()
         #processGrenades(dem, r)
 

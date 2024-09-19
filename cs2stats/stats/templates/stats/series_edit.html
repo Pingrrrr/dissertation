@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Series Overview{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+    <div class="row">
+        <div class="col text-center mb-4">
+            <h2 class="text-light">Series: {{ series.title }}</h2>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col">
+            <form method="POST" >
+            <div>
+                
+                    {% csrf_token %}
+                    {{ form.title}}
+                    <button class="btn btn-primary" type="submit">Save</button>
+                
+            </div>
+            <div>
+                    {% csrf_token %}
+                    {{ form.matchesToAdd}}
+                    <button class="btn btn-primary" type="submit">+</button>
+            </div>
+            <div>
+                    {% csrf_token %}
+                    {{ form.matchesToRemove}}
+                    <button class="btn btn-primary" type="submit">-</button>
+            </div>
+        </form>
+        <div>
+            <a class="btn btn-primary" href="..">Back to Series</a>
+        </div>
+
+        </div>
+        <div class="col">
+            
+
+            <ul class="list-group list-group-flush">
+
+                {% for match in matches %}
+
+                <li class="list-group-item bg-dark text-light">
+                    <small class="float-end">{{match.match.date}}</small>
+                    <a>{{ match.match.team_a_lineup.clanName }}({{ match.team_a_wins }}) V {{ match.match.team_b_lineup.clanName }}({{ match.team_b_wins }})</a>
+                </li>
+
+                {% endfor %}
+            </ul>
+
+
+            
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

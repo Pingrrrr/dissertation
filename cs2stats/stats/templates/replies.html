@@ -18,6 +18,15 @@
             {% endfor %}
         {% endif %}
     </small>
+    <small class="float-end">
+        {% if reply.acknowledgements.all %}
+        acknowledged:
+        {% for player in reply.acknowledgements.all %}
+        [{{ player }}]
+        {% endfor %}
+        {% endif %}
+        
+         </small>
     
     {% if reply.replies.all %}
     {% for r in reply.replies.all %}

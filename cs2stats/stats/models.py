@@ -48,6 +48,7 @@ class Player(models.Model):
 
 class Series(models.Model):
     title = models.TextField(default='Series')
+    creator = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.title
@@ -75,8 +76,8 @@ class Round(models.Model):
     match_id = models.ForeignKey(Match, on_delete=models.SET_NULL, null=True, blank=True)
     round_num = models.IntegerField(default=1)
     isWarmup = models.BooleanField(default=False)
-    t_clanName=models.CharField(max_length=100, default='Unknown')
-    ct_clanName=models.CharField(max_length=100, default='Unknown')
+    t_side=models.ForeignKey(Lineup,on_delete=models.SET_NULL, related_name='t_side_lineup', null=True )
+    ct_side=models.ForeignKey(Lineup,on_delete=models.SET_NULL, related_name='ct_side_lineup', null=True )
     winningSide = models.CharField(max_length=100, default='Unknown')
     winningTeam = models.ForeignKey(Lineup, on_delete=models.SET_NULL, null=True)
     roundEndReason = models.CharField(max_length=100,  default='Unknown') #bomb detonation, T victory, CT victory, defuse

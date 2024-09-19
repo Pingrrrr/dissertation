@@ -13,7 +13,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('team/<int:team_id>/', views.team_detail, name='team_detail'),
     path('player/<str:player_id>/', views.player_detail, name='player_detail'), 
+
     path('series/<int:series_id>/', views.series_detail, name='series_detail'), 
+    path('series/<int:series_id>/edit/', views.series_edit, name='series_edit'), 
 
 
     path('match/<int:match_id>/', views.match_detail, name='match_detail'),

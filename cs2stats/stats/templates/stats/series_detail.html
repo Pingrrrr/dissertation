@@ -7,9 +7,14 @@
 <div class="container my-4">
 
     <div class="row">
+        
         <div class="col text-center mb-4">
+            {% if user.is_authenticated and user == series.creator %}
+            <a class="btn btn-primary float-end" href="./edit/">Edit Series</a>
+            {% endif %}
             <h2 class="text-light">Series: {{ series.title }}</h2>
         </div>
+
     </div>
 
     <div class="row justify-content-center">

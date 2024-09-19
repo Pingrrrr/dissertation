@@ -22,8 +22,8 @@
                 <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
                     Series</a>
                 {% endif %}
-                <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
-                <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2" >View</a>
+                <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2 float-end" download>Download</a>
+                <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2 float-end" >View</a>
             </div>
                 <small>uploaded by: {{demo.uploaded_by}}</small>
             </li>

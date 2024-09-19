@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load widget_tweaks %}
 {% block title %} Team Communications {% endblock %}
 
 {% block content %}
@@ -127,9 +128,36 @@
             <div id="collapseUpload" class="collapse show">
 
                 <div class="card-body">
-                    {{ form }}
+                    <div class="input-group my-2">
+                        
+                        {{ form.file |add_class:"form-control"}}
+                    </div>
+                    <div class="input-group my-2">
+                        <span class="input-group-text">Description</span>
+                        {{ form.description |add_class:"form-control"}}
+                    </div>
+
+                    <div class="input-group my-2">
+                        {{ form.series_id |add_class:"form-control"}}
+                    </div>
+                    <div class="input-group my-2">
+                        <span class="input-group-text">{{ form.link_team.label_tag }}</span>
+                        <div class="input-group-text">
+                            {{ form.link_team |add_class:"form-check-input"}}
+                          </div>
+                        
+                    </div>
+                    <div class="input-group my-2">
+                        <span class="input-group-text">{{ form.match_date.label_tag }}</span>
+                        <div class="input-group-text">
+                            {{ form.match_date |add_class:"form-control"}}
+                          </div>
+                        
+                    </div>
 
                     <button type="submit" class="btn btn-primary">Upload File</button>
+
+                    
                     {% if form.errors %}
                     <div class="alert alert-danger mt-2">
                         {{ form.errors }}
@@ -175,8 +203,8 @@
                             <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
                                 Series</a>
                             {% endif %}
-                            <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
-                            <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2">View</a>
+                            <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2 float-end" download>Download</a>
+                            <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2 float-end">View</a>
                         </div>
                         <small>uploaded by: {{demo.uploaded_by}}</small>
                     </li>
