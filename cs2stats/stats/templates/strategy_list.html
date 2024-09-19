@@ -1,0 +1,21 @@
+
+
+
+    <div class="card-body">
+        <ul class="list-group">
+            {% for strategy in strategies %}
+            <li class="list-group-item bg-dark text-white">
+                <strong>{{ strategy.name }}</strong>: {{ strategy.description|truncatechars:50 }}
+                <a href="{% url 'strategy' strategy.id %}" class="btn btn-sm btn-primary ml-2 float-end">View</a>
+                <div>
+                <small>created by: {{ strategy.creator }}</small>
+            </div>
+
+            </li>
+            {% empty %}
+            <li class="list-group-item bg-dark text-white">
+                No saved strategies available.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>

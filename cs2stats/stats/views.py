@@ -4,7 +4,7 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.exceptions import PermissionDenied
 from django.core import serializers
 from django.contrib import messages
@@ -145,6 +145,7 @@ def strategy(request, strategy_id):
         strat.name = data.get('stratName')
         strat.description = data.get('description')
         strat.stratCanvas = json.loads(data.get('stratCanvas'))
+        strat.modified = timezone.now()
         strat.save()
         strat.maps.add(map)
         return redirect('strategy', strategy_id=strat.id)
@@ -158,7 +159,8 @@ def strategy_canvas(request, strategy_id):
 
 def strategies(request):
     player = Player.objects.get(user=request.user)
-    strategies = Strategy.objects.filter(creator=player)
+    team = Team.objects.filter(players=player)
+    strategies = Strategy.objects.filter(Q(creator=player) or Q(creator__in=team.players))
 
     return render(request, 'stats/strategies.html', {'strategies':strategies} )
 
@@ -201,8 +203,6 @@ def round_view(request, round_id):
     
     round = get_object_or_404(Round, id=round_id)
     rounds = Round.objects.filter(match_id=round.match_id).order_by('round_num')
-    first_round = rounds.first()
-    last_round = rounds.last()
 
 
     post = round.post
@@ -287,14 +287,22 @@ def team_detail(request, team_id):
 
     matches = Match.objects.filter(teams=team)
     series_list = Series.objects.filter(matches__in=matches).distinct()
+    print(matches)
+
+    series = []
+    for s in series_list:
+        m = getSeriesDetails(s.id)
+        series.append({
+            'series':s,
+            'matches':m
+        })
+        
     return render(request, 'stats/team_detail.html', {
         'team': team,
-        'matches': matches,
-        'series':series_list
+        'series':series
     })
 
-
-def series_detail(request, series_id):
+def getSeriesDetails(series_id):
     series = get_object_or_404(Series, id=series_id)
     
     matches = []
@@ -310,7 +318,13 @@ def series_detail(request, series_id):
             'winner': winner
         })
 
+    return matches
 
+
+def series_detail(request, series_id):
+    
+    series = get_object_or_404(Series, id=series_id)
+    matches=getSeriesDetails(series_id)
 
     return render(request, 'stats/series_detail.html', {
         'series': series,
@@ -329,19 +343,6 @@ def match_detail(request, match_id):
     team_a_wins = match.round_set.filter(winningTeam=match.team_a_lineup).count()
     team_b_wins = match.round_set.filter(winningTeam=match.team_b_lineup).count()
     winner = match.team_a_lineup if team_a_wins > team_b_wins else match.team_b_lineup
-
-    round_end_reasons = {
-        '1': "Bomb detonation",
-        '7': "Bomb defused",
-        '8': "T Elimination",
-        '9': "CT Elimination",
-        '12': "TimeOut",
-        'bomb_exploded': "Bomb detonation",
-        'bomb_defused': "Bomb defused",
-        't_killed': "T Elimination",
-        'ct_killed': "CT Elimination",
-        'time_ran_out': "TimeOut",
-    }
     
     related_demos = UploadedDemo.objects.filter(match=match)
 
@@ -359,6 +360,60 @@ def match_detail(request, match_id):
     
     return render(request, 'stats/match_detail.html', context)
 
+def match_kills(request, match_id):
+    match = Match.objects.get(id=match_id)
+
+    a_kills = Kills.objects.filter(round_ID__match_id=match_id).values(
+        'round_ID__match_id__team_a_lineup__clanName',
+        'attackerSide'
+    ).annotate(kills=Count('id'))
+
+    
+    b_kills = Kills.objects.filter(round_ID__match_id=match_id).values(
+        'round_ID__match_id__team_b_lineup__clanName',
+        'attackerSide'
+    ).annotate(kills=Count('id'))
+
+    json = {}
+
+    for kill in a_kills:
+        sideName = kill['round_ID__match_id__team_a_lineup__clanName']
+        side = kill['attackerSide']
+        size = kill['kills']
+        if sideName not in json:
+            json[sideName] = {"name": sideName, "children": []}
+
+        json[sideName]["children"].append({"name": side, "size": size})
+
+    for kill in b_kills:
+        sideName = kill['round_ID__match_id__team_b_lineup__clanName']
+        side = kill['attackerSide']
+        size = kill['kills']
+        if sideName not in json:
+            json[sideName] = {"name": sideName, "children": []}
+
+        json[sideName]["children"].append({"name": side, "size": size})
+
+    killsJson = {
+                "name": "Kills",
+                "children": list(json.values())
+    }
+
+    return JsonResponse(killsJson)
+
+def match_bombs(request, match_id):
+    match = Match.objects.get(match_id)
+    rounds = Round.objects.filter(match_id=match)
+    bombs = BombEvent.objects.filter(round__in=rounds)
+    bombjson={}
+    #need to add tside and ct side to round table
+    
+    return JsonResponse({})
+
+def match_rounds(request, match_id):
+
+    return JsonResponse({})
+
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Player', 'Coach'])
 def team_comms(request, team_id):
@@ -366,7 +421,6 @@ def team_comms(request, team_id):
     series = Series.objects.filter(matches__teams=team).distinct()
     user = request.user
 
-    
     try:
         player = Player.objects.get(user=user)
     except Player.DoesNotExist:
@@ -410,13 +464,30 @@ def team_comms(request, team_id):
 
     
     uploaded_demos = UploadedDemoFile.objects.filter(Q(uploaded_by=request.user) or Q(uploaded_by__in=team.players)).order_by('-uploaded_at')[:5]
+    strategies = Strategy.objects.filter(Q(creator=player) or Q(creator__in=team.players)).order_by('-modified')[:5]
+
+    matches = Match.objects.filter(teams=team).order_by('-date')[:5]
+    series_list = Series.objects.filter(matches__in=list(matches)).distinct()
+
+    print(matches)
+    print(series_list)
+
+    recentSeries = []
+    for s in series_list:
+        m = getSeriesDetails(s.id)
+        recentSeries.append({
+            'series':s,
+            'matches':m
+        })
 
     return render(request, 'stats/team_comms.html', {
         'team': team,
         'series':series,
+        'recentSeries':recentSeries,
         'form': form,
         'uploaded_demos': uploaded_demos,
         'notifications': notifications,  
+        'strategies':strategies
     })
 
 

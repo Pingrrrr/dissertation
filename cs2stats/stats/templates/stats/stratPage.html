@@ -17,16 +17,15 @@
 
 <!-- custom css here until I work out how to get the map to work with the other css-->
 <style>
-
-.dot {
-  height: 40px;
-  width: 40px;
-  background-color: #e13636;
-  border-radius: 50%;
-  border-color: black;
-  border-style: solid;
-  display: inline-block;
-} 
+    .dot {
+        height: 40px;
+        width: 40px;
+        background-color: #e13636;
+        border-radius: 50%;
+        border-color: black;
+        border-style: solid;
+        display: inline-block;
+    }
 
 
 
@@ -65,17 +64,25 @@
                 <div id="colour" title="Colour" class="col align-items-start">
                     <div class="dropdown ">
 
-                        <span id="colour-indicator" class="dot btn" data-bs-toggle="dropdown" style="background-color:black"></span>
+                        <span id="colour-indicator" class="dot btn" data-bs-toggle="dropdown"
+                            style="background-color:black"></span>
                         <ul class="dropdown-menu w-100">
-                            <li><button class="btn colour-btn"><span class="dot" style="background-color:black"></span></button></li>
-                            <li><button class="btn colour-btn"><span class="dot" style="background-color:white"></span></button></li>
-                          <li><button class="btn colour-btn"><span class="dot" style="background-color:orange"></span></button></li>
-                          <li><button class="btn colour-btn"><span class="dot" style="background-color:purple"></span></button></li>
-                          <li><button class="btn colour-btn"><span class="dot" style="background-color:green"></span></button></li>
-                          <li><button class="btn colour-btn"><span class="dot" style="background-color:yellow"></span></button></li>
-                          <li><button class="btn colour-btn"><span class="dot" style="background-color:cornflowerblue"> </span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:black"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:white"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:orange"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:purple"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:green"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:yellow"></span></button></li>
+                            <li><button class="btn colour-btn"><span class="dot"
+                                        style="background-color:cornflowerblue"> </span></button></li>
                         </ul>
-                      </div>
+                    </div>
                 </div>
                 <div id="draw" class="tool-icon col align-items-start" title="Draw">
                     <i class="fas fa-pencil-alt"></i>
@@ -94,7 +101,7 @@
                 </div>
                 <div id="smoke" class="tool-icon col" title="Smoke">
                     <i class="bi bi-cloud-fog2-fill"></i>
-                                </div>
+                </div>
                 <div id="molotov" class="tool-icon col" title="Molotov">
                     <i class="bi bi-fire"></i>
                 </div>
@@ -102,10 +109,10 @@
                     <i class="bi bi-brightness-high-fill"></i>
                 </div>
                 <div id="flash" class="tool-icon col" title="Flash">
-                    <i class="fas fa-eye-slash"></i>                
+                    <i class="fas fa-eye-slash"></i>
                 </div>
                 <div id="bomb" class="tool-icon col" title="Bomb">
-                    <i class="fas fa-bomb"></i>                
+                    <i class="fas fa-bomb"></i>
                 </div>
 
             </div>
@@ -134,22 +141,24 @@
                     </ul>
                 </div>
             </div>-->
-            <div class="col-sm">
+                    <div class="col-sm">
 
-                <div class="dropdown">
-                    <a class="btn btn-secondary dropdown-toggle mb-2" href="#" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Map
-                    </a>
-                    <ul class="dropdown-menu">
-                        {% for map in maps %}
-                        <li><button class="dropdown-item map-dropdown" value="{{map.name}}" >{{map.name}}</button></li>
-                        {% endfor %}
-                    </ul>
+                        <div class="dropdown">
+                            <a class="btn btn-primary dropdown-toggle mb-2" href="#" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Map
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% for map in maps %}
+                                <li><button class="dropdown-item map-dropdown"
+                                        value="{{map.name}}">{{map.name}}</button></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                    </div>
+
                 </div>
-
-            </div>
-        </div>
 
                 <div>
 
@@ -161,12 +170,13 @@
                         <div class="input-group">
                             <input type="text" name="stratName" id="stratName" placeholder="Strategy Name"
                                 class="form-control stratInput" value="{{strat.name}}" readonly>
-                                <button class="btn btn-secondary edit-button">Edit</button>
+                            <button class="btn btn-secondary edit-button">Edit</button>
                         </div>
                         <div class="input-group">
-                            <textarea name="description" id="stratDesc" class="form-control stratInput" aria-label="With textarea"
-                                placeholder="Description" rows="20" readonly>{{strat.description}}</textarea>
-                                <button class="btn btn-secondary edit-button">Edit</button>
+                            <textarea name="description" id="stratDesc" class="form-control stratInput"
+                                aria-label="With textarea" placeholder="Description" rows="20"
+                                readonly>{{strat.description}}</textarea>
+                            <button class="btn btn-secondary edit-button">Edit</button>
                         </div>
                         <button type="submit" id="saveButton" class="btn btn-primary">Save Strategy</button>
                     </form>

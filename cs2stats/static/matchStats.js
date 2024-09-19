@@ -107,5 +107,21 @@ killsChart = chart = Sunburst(killsData, {
     height: 400,
     color: ["red","yellow"]
   });
+
+  d3.json("./kills")
+    .then(function (data) {
+
+        killsChart = chart = Sunburst(data, {
+            value: d => d.size,
+            label: (d,n) => d.name + " ("+n.sum(d => d.size).value+")", 
+            width: 400,
+            height: 400,
+            color: ["red","yellow"]
+          });
+
+          document.getElementById("kills").appendChild(killsChart);
+
+
+    });
   
-  document.getElementById("kills").appendChild(killsChart);
+  

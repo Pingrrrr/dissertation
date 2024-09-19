@@ -6,154 +6,212 @@
 <div class="container mt-4 text-white">
     <h1 class="text-white">Team Communications</h1>
 
-    <div class="card mb-4 bg-dark text-white">
-        <div class="card-header">
-            Members List
-        </div>
-        <div class="card-body">
-            <ul id="membersList" class="list-group">
-                {% for player in team.players.all %}
-                <li class="list-group-item bg-dark text-white">
-                    <strong>{{ player.nick_name }}</strong> - {{ player.real_name }}
-                    <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-sm btn-primary ml-2">View
-                        Details</a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+    <!-- Notifications Card -->
 
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
-            Saved Strategies
-        </div>
-        <a href="{% url 'create_strategy' %}" class="btn btn-sm btn-primary ml-2">Create New Strategy
-        </a>
-        <div class="card-body">
-            <ul class="list-group">
-                {% for strategy in strategies %}
-                <li class="list-group-item bg-dark text-white">
-                    <strong>{{ strategy.name }}</strong>: {{ strategy.description }}
-                    <a href="{% url 'strategy_detail' strategy.id %}" class="btn btn-sm btn-primary ml-2">View
-                        Details</a>
-                    <a href="{% url 'edit_strategy' strategy.id %}" class="btn btn-sm btn-warning ml-2">Edit</a>
-                    <a href="{% url 'delete_strategy' strategy.id %}" class="btn btn-sm btn-danger ml-2">Delete</a>
-                </li>
-                {% empty %}
-                <li class="list-group-item bg-dark text-white">
-                    No saved strategies available.
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+            <a class="btn text-white" data-bs-toggle="collapse" href="#collapseNotifications" role="button"
+                aria-expanded="false" aria-controls="collapseExample">
+                Notifications
+                {% if notifications %}
+                <span class="badge text-bg-secondary">{{notifications.count}}</span>
+                {% endif %}
+            </a>
+            <div id="collapseNotifications" class="collapse">
+                {% if notifications %}
+                <div class="float-end">
+                    <form method="post" action="/read_notifications/" class="d-inline">
+                        {% csrf_token %}
+                        <select name="notifications" id="notifications" multiple hidden>
+                            {% for notification in notifications %}
+                            <option value="{{notification.id}}" selected>{{notification.id}}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-success mark-all-as-read-btn">Acknowledge
+                            All</button>
 
-    <form id="uploadForm" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="card mb-4 bg-dark text-white">
-            <div class="card-header">
-                Upload Demo
-            </div>
-            <div class="card-body">
-                {{ form }}
-
-                <button type="submit" class="btn btn-primary">Upload File</button>
-                {% if form.errors %}
-                <div class="alert alert-danger mt-2">
-                    {{ form.errors }}
+                    </form>
                 </div>
                 {% endif %}
             </div>
-
-            <div id="progress" class="progress" role="progressbar">
-                <div id="progress_bar" class="progress-bar" style="width: 0%"></div>
-            </div>
-
-
-            <div id="progressContainer" style="display: none;">
-                <div id="progressBar" style="width: 0%; height: 20px; background-color: green;"></div>
-            </div>
-            <p id="status"></p>
         </div>
-    </form>
 
+        <div id="collapseNotifications" class="collapse">
 
-
-    <div class="card mb-4 bg-dark text-white">
-        <div class="card-header">
-            Uploaded Demos
-        </div>
-        <div class="card-body">
-            <ul class="list-group">
-                {% for demo in uploaded_demos %}
-                <li class="list-group-item bg-dark text-white">
-                    <div>
-                        <strong>{{ demo.file.name }}</strong> by {{ demo.uploaded_by.nick_name }}
-                        <span class="timestamp"> - {{ demo.uploaded_at }}</span>
-
-                        {% if demo.series %}
-                        <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
-                            Series</a>
-                        {% endif %}
-                        <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
-                        <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2">View</a>
-                    </div>
-                    <small>uploaded by: {{demo.uploaded_by}}</small>
-                </li>
-                {% endfor %}
-            </ul>
-            <div class="my-3"><a href="{% url 'demos' team.id %}" class="btn btn-sm btn-primary ml-2">View All</a></div>
+            {% include 'notification_cards.html' with notifications=notifications %}
+            <div class="my-3 mx-3"><a href="/notifications/" class="btn btn-primary">View All</a></div>
 
         </div>
+
     </div>
 
 
-    <!-- Notifications Card -->
-    
+    <!-- Team Members-->
+    <div class="card mb-4 bg-dark text-white">
+
+        <div class="card-header">
+            <a class="btn text-white" data-bs-toggle="collapse" href="#collapseMembers" role="button"
+                aria-expanded="false" aria-controls="collapseExample">
+                Members List
+            </a>
+
+
+        </div>
+        <div id="collapseMembers" class="collapse show">
+            <div class="card-body">
+
+                {% include 'player_cards.html' with team=team %}
+
+
+            </div>
+        </div>
+    </div>
+
+    <!-- recent matches-->
     <div class="card mb-4 bg-dark text-white">
         <div class="card-header">
-            Notifications
-            {% if notifications %}
-            <div class="float-end">
-                <form method="post" action="/read_notifications/" class="d-inline">
-                    {% csrf_token %}
-                    <select name="notifications" id="notifications" multiple hidden>
-                        {% for notification in notifications %}
-                        <option value="{{notification.id}}" selected>{{notification.id}}</option>
-                        {% endfor %}
-                      </select>
-                    <button type="submit" class="btn btn-sm btn-success mark-all-as-read-btn">Acknowledge All</button>
-                    
+            <a class="btn text-white" data-bs-toggle="collapse" href="#collapseMatches" role="button"
+                aria-expanded="false" aria-controls="collapseExample">
+                Recent Matches
+            </a>
+        </div>
+
+        <div id="collapseMatches" class="collapse show">
+            <div class="card-body">
+                {% include 'match_cards.html' with series=recentSeries %}
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Strategies-->
+    <div class="card my-4 bg-dark text-white">
+        <div class="card-header">
+            <a class="btn text-white" data-bs-toggle="collapse" href="#collapseStrategies" role="button"
+                aria-expanded="false" aria-controls="collapseExample">
+                Strategies
+            </a>
+        </div>
+
+        <div id="collapseStrategies" class="collapse show">
+
+            {% include 'strategy_list.html' with strategies=strategies %}
+
+            <div class="my-3 mx-3">
+                <a href="{% url 'create_strategy' %}" class="btn btn-sm btn-primary ml-2">Create New Strategy</a>
+
+                <a href="{% url 'strategies' %}" class="btn btn-sm btn-primary ml-2">View All
+                </a>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <!-- Demo Upload-->
+
+    <div class="card mb-4 bg-dark text-white">
+
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="card-header">
+                <a class="btn text-white" data-bs-toggle="collapse" href="#collapseUpload" role="button"
+                    aria-expanded="false" aria-controls="collapseExample">
+                    Upload Demo
+                </a>
+
+            </div>
+
+            <div id="collapseUpload" class="collapse show">
+
+                <div class="card-body">
+                    {{ form }}
+
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                    {% if form.errors %}
+                    <div class="alert alert-danger mt-2">
+                        {{ form.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div id="progress" class="progress" role="progressbar">
+                    <div id="progress_bar" class="progress-bar" style="width: 0%"></div>
+                </div>
+
+
+                <div id="progressContainer" style="display: none;">
+                    <div id="progressBar" style="width: 0%; height: 20px; background-color: green;"></div>
+                </div>
+                <p id="status"></p>
+            </div>
+        </form>
+    </div>
+
+
+
+
+    <div class="card mb-4 bg-dark text-white">
+        <div class="card-header">
+            <a class="btn text-white" data-bs-toggle="collapse" href="#collapseDemos" role="button"
+                aria-expanded="false" aria-controls="collapseExample">
+                Uploaded Demos
+            </a>
+
+        </div>
+        <div id="collapseDemos" class="collapse">
+
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for demo in uploaded_demos %}
+                    <li class="list-group-item bg-dark text-white">
+                        <div>
+                            <strong>{{ demo.file.name }}</strong> by {{ demo.uploaded_by.nick_name }}
+                            <span class="timestamp"> - {{ demo.uploaded_at }}</span>
+
+                            {% if demo.series %}
+                            <a href="{% url 'series_detail' demo.series.id %}" class="btn btn-sm btn-primary ml-2">View
+                                Series</a>
+                            {% endif %}
+                            <a href="{{ demo.file.url }}" class="btn btn-sm btn-primary ml-2" download>Download</a>
+                            <a href="{% url 'demo' demo.id %}" class="btn btn-sm btn-primary ml-2">View</a>
+                        </div>
+                        <small>uploaded by: {{demo.uploaded_by}}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="my-3"><a href="{% url 'demos' team.id %}" class="btn btn-sm btn-primary ml-2">View All</a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+    <!--
+        <div class="card mb-4 bg-dark text-white">
+            <div class="card-header">
+                To-Do List
+            </div>
+            <div class="card-body">
+                <ul id="todoList" class="list-group">
+                </ul>
+                <form id="todoForm" class="mt-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-dark bg-dark text-white" id="todoItem"
+                            placeholder="New task..." required>
+                        <button class="btn btn-primary" type="submit">Add Task</button>
+                    </div>
                 </form>
             </div>
-            {% endif %}
         </div>
-
-        {% include 'notification_cards.html' with notifications=notifications %}
-
-        <a class="btn btn-primary" href="/notifications/">View All</a>
-        
-
-    </div>
-
-
-
-    <div class="card mb-4 bg-dark text-white">
-        <div class="card-header">
-            To-Do List
-        </div>
-        <div class="card-body">
-            <ul id="todoList" class="list-group">
-            </ul>
-            <form id="todoForm" class="mt-3">
-                <div class="input-group">
-                    <input type="text" class="form-control form-control-dark bg-dark text-white" id="todoItem"
-                        placeholder="New task..." required>
-                    <button class="btn btn-primary" type="submit">Add Task</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    -->
 </div>
 
 <script src="{% static 'upload_demo.js' %}"></script>

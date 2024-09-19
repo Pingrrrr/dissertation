@@ -1,0 +1,17 @@
+{% load static %}
+
+<div class="row justify-content-center">
+    {% for player in team.players.all %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-3">
+        <div class="card ">
+            <img src="{% static player.image_url %}" class="card-img-top" alt="{{ player.nick_name }}"
+                loading="lazy">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ player.nick_name }}</h5>
+                <a href="{% url 'player_detail' player.steam_id %}" class="btn btn-primary mt-3">View
+                    Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
