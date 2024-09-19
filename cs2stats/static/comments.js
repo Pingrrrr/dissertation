@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     commentFormTextInput = document.getElementById('id_text');
 
     replyButtons = document.querySelectorAll('.reply-button');
+    
 
     replySample = document.getElementById('reply-sample');
     replySampleUser = document.getElementById('reply-sample-user');

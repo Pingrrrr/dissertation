@@ -449,24 +449,38 @@ def notifications(request):
         'read_notifications': read_notifications,
     })
 
+@login_required(login_url='login')
 def read_notifications(request):
+
+    player = Player.objects.get(user=request.user)
 
     if request.POST:
         for notification_id in request.POST.getlist('notifications'):
             n = Notification.objects.get(id=notification_id)
             n.is_read=True
             n.save()
+                    #also acknowledge the comment
+            if not player in n.comment.acknowledgements:
+                n.comment.acknowledgements.add(player)
 
     #https://stackoverflow.com/a/50687396 - go back to whatever called this 
     return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 
+@login_required(login_url='login')
 def read_notification(request):
+
+    player = Player.objects.get(user=request.user)
 
     if request.POST:
         notification_id = request.POST.get('notification')
         n = Notification.objects.get(id=notification_id)
         n.is_read=True
         n.save()
+
+        #also acknowledge the comment
+        print(n.comment.acknowledgements.all())
+        if not player in n.comment.acknowledgements.all():
+            n.comment.acknowledgements.add(player)
             
     #https://stackoverflow.com/a/50687396 - go back to whatever called this 
     return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
@@ -497,5 +511,3 @@ def parsedemo(request, uploaded_file_id, series_id=None):
 
     return redirect('demo', uploaded_file_id=demoFile.id)
 
-def sunburst(request):
-    return render(request ,'stats/sunburst.html')

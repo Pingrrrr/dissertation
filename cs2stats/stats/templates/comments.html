@@ -7,12 +7,16 @@
 
         <div id="comment-{{ comment.id }}" class="list-group-item bg-dark text-white">
             <strong id="comment-user">{{ comment.author.username }}</strong> 
-            <div class="float-end"><button class="btn btn-primary d-flex float-end reply-button"
-                    data-commentId="{{ comment.id }}">reply</button></div>
+            <div class="float-end">
+                <div class="btn-group float-end">
+                <button class="btn btn-primary reply-button"
+                    data-commentId="{{ comment.id }}">Reply</button>
+                </div>
+
+            </div>
             <p id="comment-text">{{ comment.text }}</p>
             <small class="timestamp">{{ comment.created_time }}</small>
-            <small>
-                
+            <small>    
                 {% if comment.tagged_players.all %}
                 tagged:
                 {% for player in comment.tagged_players.all %}
@@ -20,6 +24,15 @@
                 {% endfor %}
                 {% endif %}
             </small>
+            <small class="float-end">
+                {% if comment.acknowledgements.all %}
+                acknowledged:
+                {% for player in comment.acknowledgements.all %}
+                [{{ player }}]
+                {% endfor %}
+                {% endif %}
+                
+                 </small>
 
 
         </div>

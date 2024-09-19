@@ -14,6 +14,7 @@ class Comment(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
     text = models.TextField()
     tagged_players = models.ManyToManyField('Player', related_name='tagged_in_comments', blank=True)
+    acknowledgements = models.ManyToManyField('Player', related_name='acknowledged_by', blank=True)
     created_time = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now_add=True)
 

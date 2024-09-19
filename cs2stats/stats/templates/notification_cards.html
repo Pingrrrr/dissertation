@@ -20,7 +20,7 @@
                         <div class="btn-group" role="group">
                             <a class="btn btn-primary" href="{% url 'round_view' notification.comment.post.round.id %}#comment-{{notification.comment.id}}">View Comment</a>
                             {% if not notification.is_read %}
-                            <button class="btn btn-primary" type="submit" >Mark as Read</button>
+                            <button class="btn btn-primary" type="submit" >Acknowledge</button>
                             {% endif %}
 
                         </div>
