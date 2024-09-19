@@ -44,7 +44,7 @@ class Player(models.Model):
     steam_id = models.CharField(max_length=50, primary_key=True)
 
     def __str__(self):
-        return self.nick_name
+        return self.nick_name or 'Unnamed Player'
 
 class Series(models.Model):
     title = models.TextField(default='Series')
@@ -106,7 +106,7 @@ class PlayerTick(models.Model):
     flash_duration = models.FloatField(default=0.0)
 
     def __str__(self):
-        return f"{self.player.id} : {self.tick}"
+        return f"{self.player.steam_id} : {self.tick}"
 
     
 class BombEvent(models.Model):

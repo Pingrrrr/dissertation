@@ -10,12 +10,11 @@ from django.core import serializers
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 import json
-from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from .models import Player, Match, Stat, Team, Series, Map, Round, UploadedDemo, Notification, Comment, Strategy,UploadedDemoFile
 from .forms import CreateUserForm, CreateTeamForm, DemoUploadForm, CommentForm
-from .decorators import unauthenicated_user, allowed_users
+from .decorators import unauthenticated_user, allowed_users
 from .demo import *
 
 from django.contrib.auth.decorators import login_required
@@ -44,7 +43,7 @@ def logout(request):
     messages.info(request, "You have been logged out.")
     return redirect('index')
 
-@unauthenicated_user
+@unauthenticated_user
 def loginPage(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -54,14 +53,15 @@ def loginPage(request):
         
         if user is not None:
             login(request, user)
+            print('User logged in, redirecting to dashboard')
             return redirect('dashboard')  
         else:
             messages.error(request, 'Username or password is incorrect')
             
-    return render(request, 'stats/login_register.html')
+    return render(request, 'registration/login.html')
 
 # https://www.youtube.com/watch?v=tUqUdu0Sjyc&list=PL-51WBLyFTg2vW-_6XBoUpE7vpmoR3ztO&index=14
-@unauthenicated_user
+@unauthenticated_user
 def signupPage(request):
     if request.method == 'POST':
         form = CreateUserForm(request.POST)
@@ -103,8 +103,8 @@ def create_team(request):
     if request.method == 'POST':
         form = CreateTeamForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('team_detail')
+            team = form.save()
+            return redirect('team_comms', team_id=team.id) 
     else:
         form = CreateTeamForm()
     return render(request, 'stats/create_team.html', {'form': form})

@@ -18,9 +18,8 @@
                     <a href="{% url 'parsedemo' demoFile.id %}" class="btn btn-sm btn-primary ml-2" >Retry</a>
                 {% endif %}
 
-
             </li>
-            {% if demo.match %}
+            {% if demo.match and demoFile.status == 'complete'%}
             <li class="list-group-item bg-dark text-white">
                 <strong>{{ demo.match }}</strong>
                 <a href="{% url 'match_detail' demo.match.id %}" class="btn btn-sm btn-primary ml-2">View Match</a>
