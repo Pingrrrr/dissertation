@@ -6,9 +6,9 @@ from django.shortcuts import redirect
 def unauthenticated_user(view_func):
     def wrapper_func(request, *args, **kwargs):
         if request.user.is_authenticated:
-            print('User is authenticated, redirecting to dashboard')
+            
             return redirect('dashboard')
-        print('User is not authenticated, calling view function')
+        
         return view_func(request, *args, **kwargs)
     
     return wrapper_func

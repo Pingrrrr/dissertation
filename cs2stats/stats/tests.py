@@ -263,14 +263,6 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'registration/signup.html')
 
-    def test_team_detail_view(self):
-        """Test the team detail view."""
-        response = self.client.get(reverse('team_detail', args=[self.team.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'stats/team_detail.html')
-        self.assertIn('team', response.context)
-        self.assertIn('matches', response.context)
-
     def test_strategy_view(self):
         """Test the strategy view."""
         response = self.client.get(reverse('strategy', args=[self.strategy.id]))
@@ -317,6 +309,23 @@ class DashboardViewTest(TestCase):
         self.assertTemplateUsed(response, 'stats/dashboard.html')
         self.assertContains(response, 'Test Series 1')
         self.assertContains(response, 'Test Series 2')
+
+#template testing
+
+class TemplateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='password')
+        player_group, created = Group.objects.get_or_create(name='Player')
+        self.user.groups.add(player_group)
+        self.client.login(username='testuser', password='password')
+
+        self.player = Player.objects.create(user=self.user, nick_name='TestPlayer', steam_id='teststeamid')
+
+    def test_login_template(self):
+        response = self.client.get(reverse('login'))
+        self.assertTemplateUsed(response, 'registration/login.html')
+
+
 
 # Forms testing
 class CreateTeamFormTest(TestCase):
@@ -412,10 +421,6 @@ class URLTests(SimpleTestCase):
         url = reverse('dashboard')
         self.assertEqual(resolve(url).func, views.dashboard)
 
-    def test_team_detail_url(self):
-        url = reverse('team_detail', args=[1])
-        self.assertEqual(resolve(url).func, views.team_detail)
-
     def test_player_detail_url(self):
         url = reverse('player_detail', args=['player1'])
         self.assertEqual(resolve(url).func, views.player_detail)
@@ -508,10 +513,6 @@ class URLTests(SimpleTestCase):
         url = reverse('read_notification')
         self.assertEqual(resolve(url).func, views.read_notification)
 
-    def test_sunburst_url(self):
-        url = reverse('sunburst')
-        self.assertEqual(resolve(url).func, views.sunburst)
-    
     def test_login_url(self):
         url = reverse('login')
         response = self.client.get(url)

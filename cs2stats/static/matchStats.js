@@ -19,7 +19,7 @@ const bombplantData = {
     }
 ]
 },{
-    "name": "VP",
+    "name": "EF",
     "children": [
     {
         "name": "A site",
@@ -48,14 +48,14 @@ const roundData = {
     "children":[{
         "name": "NAVI",
         "children":[
-            {"name":"T","size":9},
+            {"name":"T","size":12},
             {"name":"CT","size":10}
         ]
     },{
-        "name": "VP",
+        "name": "EF",
         "children":[
-            {"name":"T","size":8},
-            {"name":"CT","size":8}
+            {"name":"T","size":10},
+            {"name":"CT","size":10}
         ]
     }
 ]
@@ -70,7 +70,7 @@ const killsData = {
             {"name":"CT","size":38}
         ]
     },{
-        "name": "VP",
+        "name": "EF",
         "children":[
             {"name":"T","size":23},
             {"name":"CT","size":11}
